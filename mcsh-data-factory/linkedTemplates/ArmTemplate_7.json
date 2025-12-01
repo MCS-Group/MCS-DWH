@@ -1,0 +1,1403 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "mcsh-data-factory"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "td_dwh_sink"
+		},
+		"Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table": {
+			"type": "string",
+			"defaultValue": "BigOneFullCustomers_D"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table": {
+			"type": "string",
+			"defaultValue": "TradeshopGPS_TD"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder": {
+			"type": "string",
+			"defaultValue": "td_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file": {
+			"type": "string",
+			"defaultValue": "td_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file": {
+			"type": "string",
+			"defaultValue": "td_dwh_full_trade_shop_gps.csv"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "utcNow()"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "addMinutes(utcNow(), 35)"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_pl_employee')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_employee",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_employee",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"tableName": "TBLEMPLOYEE",
+										"schema": "HRMS_PROD"
+									},
+									"source2": {
+										"tableName": "dim_company",
+										"schema": "dwh_hr"
+									},
+									"sink1": {
+										"tableName": "dim_employee",
+										"schema": "dwh_hr"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_pl_employee_history')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_employee_history",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_employee_history",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"employeeHist": {
+										"tableName": "TBLEMPEMPLHIST",
+										"schema": "HRMS_PROD"
+									},
+									"company": {
+										"tableName": "dim_company",
+										"schema": "dwh_hr"
+									},
+									"employee": {
+										"tableName": "dim_employee",
+										"schema": "dwh_hr"
+									},
+									"department": {
+										"tableName": "dim_department",
+										"schema": "dwh_hr"
+									},
+									"position": {
+										"tableName": "dim_position",
+										"schema": "dwh_hr"
+									},
+									"grade": {
+										"tableName": "dim_grade",
+										"schema": "dwh_hr"
+									},
+									"level": {
+										"tableName": "dim_level",
+										"schema": "dwh_hr"
+									},
+									"sink1": {
+										"tableName": "fact_employee_history",
+										"schema": "dwh_hr"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_pl_position')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_position",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_position",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"tableName": "TBLPOSITION",
+										"schema": "HRMS_PROD"
+									},
+									"source2": {
+										"tableName": "dim_company",
+										"schema": "dwh_hr"
+									},
+									"sink1": {
+										"tableName": "dim_position",
+										"schema": "dwh_hr"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "911d8120-6961-490d-9ec0-29f116b1cc9b"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_pl_sigrade')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_sigrade",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_sigrade",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"tableName": "SIGRADE",
+										"schema": "HRMS_PROD"
+									},
+									"sink1": {
+										"tableName": "dim_grade",
+										"schema": "dwh_hr"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_pl_silevel')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_silevel",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_silevel",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"tableName": "SILEVEL",
+										"schema": "HRMS_PROD"
+									},
+									"sinkDimLevel": {
+										"tableName": "dim_level",
+										"schema": "dwh_hr"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:11Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "EmployeeProfile_deletes",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "EmployeeProfile_deletes",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"existingSource0": {},
+									"deleteOldSource0": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-25T09:03:50Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_evs_allemployee_UpsertTrigger')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_xy6",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "newQuery0"
+							},
+							{
+								"name": "Destination",
+								"value": "evs//evs"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "OracleSource",
+								"oracleReaderQuery": "select \n    FIRSTNAME as \"fn\",\n    LASTNAME as \"ln\",\n    REGNO as \"rn\",\n    COMPANYID as \"oid\",\n    PNAME as \"po\",\n    GNAME as \"gname\",\n    STATUS as \"status\",\n    EMPID as \"empid\",\n    STATUSDATE as \"status_date\",\n    ISFOREIGNER as \"is_foreigner\"\nfrom HRMS_PROD.V_BI_HREMPLOYEE \nwhere COMPANYID in  ('MCSCC', 'TD', 'TEL', 'AG', 'MG', 'ES', 'BMS', 'MCSES') \nand STATUS <> 'Бүртгэсэн'",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings",
+									"metadata": [
+										{
+											"name": "dfs",
+											"value": "sdf"
+										}
+									]
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": false,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "linkedService_err",
+										"type": "LinkedServiceReference"
+									},
+									"path": "error"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SourceDataset_xy6",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "df_evs_allemployee_upsert",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy_xy6",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_evs_allemployee_upsert",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceEmployees": {},
+									"existingAllSources": {},
+									"upsertEmployees": {},
+									"archiveToDataLake": {
+										"fileName": "evs_archive.csv",
+										"folderName": "archive"
+									},
+									"logSkippedMigrated": {
+										"fileName": "evs_skip.csv",
+										"folderName": "skipped"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/EVS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T04:29:42Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_evs_allemployee_stopped')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_xy6",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "newQuery0"
+							},
+							{
+								"name": "Destination",
+								"value": "evs//evs"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "OracleSource",
+								"oracleReaderQuery": "select \n    FIRSTNAME as \"fn\",\n    LASTNAME as \"ln\",\n    REGNO as \"rn\",\n    COMPANYID as \"oid\",\n    PNAME as \"po\",\n    GNAME as \"gname\",\n    STATUS as \"status\",\n    EMPID as \"empid\",\n    STATUSDATE as \"status_date\",\n    ISFOREIGNER as \"is_foreigner\"\nfrom HRMS_PROD.V_BI_HREMPLOYEE \nwhere COMPANYID in  ('MCSCC', 'TD', 'TEL', 'AG', 'MG', 'ES', 'BMS', 'MCSES') \nand STATUS <> 'Бүртгэсэн'",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings",
+									"metadata": [
+										{
+											"name": "dfs",
+											"value": "sdf"
+										}
+									]
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": false,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "linkedService_err",
+										"type": "LinkedServiceReference"
+									},
+									"path": "error"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SourceDataset_xy6",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "df_evs_allemployee",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy_xy6",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_evs_allemployee",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceEmployees": {},
+									"existingAllSources": {},
+									"insertNewEmployees": {},
+									"archiveToDataLake": {
+										"csv_fileName": "evs_log",
+										"csv_directory": "error"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/EVS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T04:33:58Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dwh_df_employee_history_copy1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dwh_df_employee_history_copy1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"employee": {
+										"tableName": "dim_employee",
+										"schema": "dwh_hr"
+									},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-23T03:23:20Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_SIGRADE')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SIGRADE_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "SIGRADE_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "SIGRADE"
+									},
+									"sink1": {
+										"cwtablename": "dim_grade"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_SILEVEL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SILEVEL_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "SILEVEL_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "SILEVEL"
+									},
+									"sink1": {
+										"cwtablename": "dim_level"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLCOMPANY')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TBLCOMPANY_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "TBLCOMPANY_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLCOMPANY"
+									},
+									"sink1": {
+										"cwtablename": "dim_company"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLDEPARTMENT')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "From_Staging_to_DWH_TBLDEPARTMENT",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "From_Staging_to_DWH_TBLDEPARTMENT",
+								"type": "DataFlowReference",
+								"parameters": {
+									"cwfolder": "\"TBLDEPARTMENT\"",
+									"cwtablename": "\"dim_department\""
+								},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLDEPARTMENT"
+									},
+									"source2": {
+										"cwtablename": "dim_company"
+									},
+									"sink1": {
+										"cwtablename": "dim_department"
+									}
+								},
+								"linkedServiceParameters": {
+									"sink1": {
+										"schemaLinkedService": {
+											"cwtablename": "dim_department"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLEMPEMPLHIST')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TBLEMPEMPLHIST_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "TBLEMPEMPLHIST_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {
+									"cwfolder": "\"TBLEMPEMPLHIST\""
+								},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLEMPEMPLHIST"
+									},
+									"source2": {
+										"cwtablename": "dim_employee"
+									},
+									"source3": {
+										"cwtablename": "dim_company"
+									},
+									"source4": {
+										"cwtablename": "dim_department"
+									},
+									"source5": {
+										"cwtablename": "dim_position"
+									},
+									"source6": {
+										"cwtablename": "dim_grade"
+									},
+									"source7": {
+										"cwtablename": "dim_level"
+									},
+									"sink1": {
+										"cwtablename": "fact_employee_history"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLEmployee')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Employee_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Employee_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLEMPLOYEE"
+									},
+									"sink1": {
+										"cwtablename": "dim_employee"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"runConcurrently": true,
+							"continueOnError": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLPOSITION')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TBLPOSITION_From_Staging_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "TBLPOSITION_From_Staging_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {
+									"cwfolder": "\"TBLPOSITION\"",
+									"cwtablename": "\"dim_position\""
+								},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLPOSITION"
+									},
+									"source2": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:11Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/5min Trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Order_1d_Ago_Extract_CSV",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"windowStart": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart')]",
+							"windowEnd": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 5,
+						"startTime": "2025-01-14T12:03:00",
+						"timeZone": "Ulaanbaatar Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Daily Morning')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Small_Tables_Full_Extract",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "AG_MainDB_to_Raw",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"main_directory": "[parameters('Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Customer_Full_Flow",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Order_1d_Ago_Extract_CSV",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"windowStart": "[parameters('Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart')]",
+							"windowEnd": "[parameters('Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "CC_Customer_Full_Flow",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "TD_Small_Tables_Full_Extract",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "CC_MainDB_to_Raw",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"main_directory": "[parameters('Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "TD_MainDB_to_Raw",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"main_directory": "[parameters('Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "CC_Small_Tables_Full_Extract",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"main_directory": "[parameters('Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "TD_Customer_Full_Flow",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"src_customer_table": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table')]",
+							"src_tradeshop_gps_table": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table')]",
+							"dest_folder": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder')]",
+							"dest_customer_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file')]",
+							"dest_gps_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2024-11-28T05:00:00",
+						"timeZone": "Ulaanbaatar Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NightTrigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_evs_allemployee_UpsertTrigger",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"windowStart": "[parameters('NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart')]",
+							"windowEnd": "[parameters('NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 24,
+						"startTime": "2025-11-27T01:40:00",
+						"timeZone": "Ulaanbaatar Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_evs_allemployee_UpsertTrigger')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Trigger_qd9')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "GreenERP_HREmployee",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"windowStart": "[parameters('Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart')]",
+							"windowEnd": "[parameters('Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "to_DWH_TBLPOSITION",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 24,
+						"startTime": "2025-11-10T02:00:00Z",
+						"timeZone": "UTC"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/to_DWH_TBLPOSITION')]"
+			]
+		}
+	]
+}

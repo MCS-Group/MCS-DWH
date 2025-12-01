@@ -1,0 +1,3410 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "mcsh-data-factory"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_TradeShop_DWH_to_DataService')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "AG"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference"
+							},
+							"name": "agDwhTradeShopTable"
+						},
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "addressFromDataServiceTable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "saveToDataServiceDB"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectRequiredFields",
+							"description": "Data Service-iin customer_ag_info table-d hadgalj boloh medeelluudiig gargan avah process"
+						},
+						{
+							"name": "locationInfoProcessing"
+						},
+						{
+							"name": "separateAddressByLevel",
+							"description": "loc_name-g aimag_hot, duureg_sum, bag_khoroo gesen hesguuded huvaana"
+						},
+						{
+							"name": "makeAddressList",
+							"description": "aimag_hot, duureg_sum, bag_khoroo tus buriinh ni huvid list uusgene, uuniig ashiglan customer datanaas haygiin medeelel gargan avna"
+						},
+						{
+							"name": "customerWithLocationList"
+						},
+						{
+							"name": "locationCapturing",
+							"description": "aimag_hot, duureg_sum, bag_khoroo-nii medeelliig dataservice-iin DB deerh location table-tai matchlaad taarch bgaag ni ylgaj avna"
+						},
+						{
+							"name": "selectFieldForDB"
+						},
+						{
+							"name": "additionalFixOnLocation",
+							"description": "capitalize\nUlaanbaatriinh bish bol bag_khoroo-nii medeelliig hasah"
+						},
+						{
+							"name": "addressFixDistrictCityAbbr1",
+							"description": "УБ СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "addressFixDistrictAbbr1",
+							"description": "СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          trade_shop_ag_id as integer,",
+						"          is_reliable_trade_shop_ag_id as integer,",
+						"          trade_shop_name as string,",
+						"          customer_ag_id as integer,",
+						"          full_address as string,",
+						"          longitude as double,",
+						"          latitude as double,",
+						"          phone_number as string,",
+						"          isis_channel_id as integer,",
+						"          trade_shop_id_check as string,",
+						"          is_reliable_trade_shop_id_check as integer,",
+						"          store_type_name as string,",
+						"          trade_shop_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          customer_register as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> agDwhTradeShopTable",
+						"source(output(",
+						"          id as integer,",
+						"          loc_name as string,",
+						"          full_address as string,",
+						"          lvl as integer,",
+						"          eb_id as string,",
+						"          parent_id as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> addressFromDataServiceTable",
+						"agDwhTradeShopTable select(mapColumn(",
+						"          trade_shop_ag_id,",
+						"          customer_ag_id,",
+						"          trade_shop_name,",
+						"          tradeshop_id_gps = trade_shop_id_check,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          e_group_name = store_type_name,",
+						"          operation_start_date = trade_shop_created_date,",
+						"          trade_shop_created_date,",
+						"          customer_register",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectRequiredFields",
+						"addressFixDistrictAbbr1 derive(aimag_hot = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 1)),",
+						"          duureg_sum = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 2)),",
+						"          bag_khoroo = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 3)),",
+						"          join_col = 1) ~> locationInfoProcessing",
+						"addressFromDataServiceTable derive(aimag_hot_list = iif(lvl == 1, lower(loc_name), toString(null())),",
+						"          duureg_sum_list = iif(lvl == 2, lower(loc_name), toString(null())),",
+						"          bag_khoroo_list = iif(lvl == 3, lower(loc_name), toString(null())),",
+						"          join_col = 1) ~> separateAddressByLevel",
+						"separateAddressByLevel aggregate(aimag_hot_list = collectUnique(aimag_hot_list),",
+						"          duureg_sum_list = collectUnique(duureg_sum_list),",
+						"          bag_khoroo_list = collectUnique(bag_khoroo_list),",
+						"          join_col = max(join_col)) ~> makeAddressList",
+						"locationInfoProcessing, makeAddressList join(locationInfoProcessing@join_col == makeAddressList@join_col,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> customerWithLocationList",
+						"customerWithLocationList derive(aimag_hot = toString(at(intersect(split(lower(aimag_hot), ' '), aimag_hot_list), 1)),",
+						"          duureg_sum = toString(at(intersect(split(lower(duureg_sum), ' '), duureg_sum_list), 1)),",
+						"          bag_khoroo = iif(\r",
+						"    instr(bag_khoroo, '-р хороо ') != 0,\r",
+						"    toInteger(at(split(bag_khoroo, '-р хороо '), 1)), \r",
+						"    iif(\r",
+						"        instr(bag_khoroo, '-р хороо,') != 0,\r",
+						"        toInteger(at(split(bag_khoroo, '-р хороо,'), 1)),\r",
+						"        iif(\r",
+						"            instr(bag_khoroo, 'хороо ') != 0,\r",
+						"            toInteger(at(split(bag_khoroo, 'хороо '), 1)),\r",
+						"            toInteger(null())\r",
+						"        )\r",
+						"    )\r",
+						")) ~> locationCapturing",
+						"locationCapturing select(mapColumn(",
+						"          trade_shop_ag_id,",
+						"          customer_ag_id,",
+						"          customer_register,",
+						"          trade_shop_name,",
+						"          tradeshop_id_gps,",
+						"          aimag_hot,",
+						"          duureg_sum,",
+						"          bag_khoroo,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          e_group_name,",
+						"          operation_start_date,",
+						"          trade_shop_created_date = operation_start_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectFieldForDB",
+						"selectFieldForDB derive(aimag_hot = replace(initCap(replace(aimag_hot, '-', ' ')), ' ', '-'),",
+						"          duureg_sum = replace(initCap(replace(duureg_sum, '-', ' ')), ' ', '-'),",
+						"          bag_khoroo = iif(aimag_hot =='улаанбаатар', bag_khoroo, toInteger(null())),",
+						"          trade_shop_created_date = operation_start_date) ~> additionalFixOnLocation",
+						"selectRequiredFields derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        replace(\r",
+						"                            replace(\r",
+						"                                replace(\r",
+						"                                    lower(full_address), 'УБ НД', 'Улаанбаатар, Налайх дүүрэг,'\r",
+						"                                ), 'УБ БНД', 'Улаанбаатар, Багануур дүүрэг,'\r",
+						"                            ), 'УБ БХД', 'Улаанбаатар, Багахангай дүүрэг,'\r",
+						"                        ), 'УБ ЧД', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'УБ СБД', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'УБ СХД', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'УБ ХУД', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'УБ БЗД', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'УБ БГД', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictCityAbbr1",
+						"addressFixDistrictCityAbbr1 derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        fixed_address, 'чд ', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'сбд', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'схд', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'худ ', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'бзд', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'бгд', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictAbbr1",
+						"additionalFixOnLocation alterRow(upsertIf(true())) ~> AlterRow1",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['trade_shop_ag_id','tradeshop_id_gps'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CC_Customer_DWH_to_DataService')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference"
+							},
+							"name": "ccDwhCustomerTable"
+						},
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "addressFromDataServiceTable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "saveToDataServiceDB"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectRequiredFields",
+							"description": "Data Service-iin customer_ag_info table-d hadgalj boloh medeelluudiig gargan avah process"
+						},
+						{
+							"name": "locationInfoProcessing"
+						},
+						{
+							"name": "separateAddressByLevel",
+							"description": "loc_name-g aimag_hot, duureg_sum, bag_khoroo gesen hesguuded huvaana"
+						},
+						{
+							"name": "makeAddressList",
+							"description": "aimag_hot, duureg_sum, bag_khoroo tus buriinh ni huvid list uusgene, uuniig ashiglan customer datanaas haygiin medeelel gargan avna"
+						},
+						{
+							"name": "customerWithLocationList"
+						},
+						{
+							"name": "locationCapturing",
+							"description": "aimag_hot, duureg_sum, bag_khoroo-nii medeelliig dataservice-iin DB deerh location table-tai matchlaad taarch bgaag ni ylgaj avna"
+						},
+						{
+							"name": "selectFieldForDB"
+						},
+						{
+							"name": "additionalFixOnLocation",
+							"description": "capitalize\nUlaanbaatriinh bish bol bag_khoroo-nii medeelliig hasah"
+						},
+						{
+							"name": "addressFixDistrictCityAbbr1",
+							"description": "УБ СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "addressFixDistrictAbbr1",
+							"description": "СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "AlterRow1"
+						},
+						{
+							"name": "removeNullCustomersCCID"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          customer_cc_id as integer,",
+						"          customer_register as string,",
+						"          is_reliable_register as integer,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          golden_flag as string,",
+						"          register_type as integer,",
+						"          phone_number as string,",
+						"          customer_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ccDwhCustomerTable",
+						"source(output(",
+						"          id as integer,",
+						"          loc_name as string,",
+						"          full_address as string,",
+						"          lvl as integer,",
+						"          eb_id as string,",
+						"          parent_id as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> addressFromDataServiceTable",
+						"ccDwhCustomerTable select(mapColumn(",
+						"          customer_cc_id,",
+						"          customer_name,",
+						"          full_address,",
+						"          customer_register,",
+						"          register_type,",
+						"          phone_number,",
+						"          customer_created_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectRequiredFields",
+						"addressFixDistrictAbbr1 derive(aimag_hot = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 1)),",
+						"          duureg_sum = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 2)),",
+						"          bag_khoroo = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 3)),",
+						"          join_col = 1) ~> locationInfoProcessing",
+						"addressFromDataServiceTable derive(aimag_hot_list = iif(lvl == 1, lower(loc_name), toString(null())),",
+						"          duureg_sum_list = iif(lvl == 2, lower(loc_name), toString(null())),",
+						"          bag_khoroo_list = iif(lvl == 3, lower(loc_name), toString(null())),",
+						"          join_col = 1) ~> separateAddressByLevel",
+						"separateAddressByLevel aggregate(aimag_hot_list = collectUnique(aimag_hot_list),",
+						"          duureg_sum_list = collectUnique(duureg_sum_list),",
+						"          bag_khoroo_list = collectUnique(bag_khoroo_list),",
+						"          join_col = max(join_col)) ~> makeAddressList",
+						"locationInfoProcessing, makeAddressList join(locationInfoProcessing@join_col == makeAddressList@join_col,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> customerWithLocationList",
+						"customerWithLocationList derive(aimag_hot = toString(at(intersect(split(lower(aimag_hot), ' '), aimag_hot_list), 1)),",
+						"          duureg_sum = toString(at(intersect(split(lower(duureg_sum), ' '), duureg_sum_list), 1)),",
+						"          bag_khoroo = iif(\r",
+						"    instr(bag_khoroo, '-р хороо ') != 0,\r",
+						"    toInteger(at(split(bag_khoroo, '-р хороо '), 1)), \r",
+						"    iif(\r",
+						"        instr(bag_khoroo, '-р хороо,') != 0,\r",
+						"        toInteger(at(split(bag_khoroo, '-р хороо,'), 1)),\r",
+						"        iif(\r",
+						"            instr(bag_khoroo, 'хороо ') != 0,\r",
+						"            toInteger(at(split(bag_khoroo, 'хороо '), 1)),\r",
+						"            iif(isInteger(bag_khoroo), toInteger(bag_khoroo), toInteger(null()))\r",
+						"        )\r",
+						"    )\r",
+						")) ~> locationCapturing",
+						"locationCapturing select(mapColumn(",
+						"          customer_cc_id,",
+						"          customer_name,",
+						"          full_address,",
+						"          customer_register,",
+						"          register_type,",
+						"          phone_number,",
+						"          customer_created_date,",
+						"          aimag_hot,",
+						"          duureg_sum,",
+						"          bag_khoroo",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectFieldForDB",
+						"selectFieldForDB derive(aimag_hot = replace(initCap(replace(aimag_hot, '-', ' ')), ' ', '-'),",
+						"          duureg_sum = replace(initCap(replace(duureg_sum, '-', ' ')), ' ', '-'),",
+						"          bag_khoroo = iif(aimag_hot =='улаанбаатар', bag_khoroo, toInteger(null()))) ~> additionalFixOnLocation",
+						"selectRequiredFields derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        replace(\r",
+						"                            replace(\r",
+						"                                replace(\r",
+						"                                    lower(full_address), 'УБ НД', 'Улаанбаатар, Налайх дүүрэг,'\r",
+						"                                ), 'УБ БНД', 'Улаанбаатар, Багануур дүүрэг,'\r",
+						"                            ), 'УБ БХД', 'Улаанбаатар, Багахангай дүүрэг,'\r",
+						"                        ), 'УБ ЧД', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'УБ СБД', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'УБ СХД', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'УБ ХУД', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'УБ БЗД', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'УБ БГД', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictCityAbbr1",
+						"addressFixDistrictCityAbbr1 derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        fixed_address, 'чд ', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'сбд', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'схд', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'худ ', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'бзд', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'бгд', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictAbbr1",
+						"removeNullCustomersCCID alterRow(upsertIf(true())) ~> AlterRow1",
+						"additionalFixOnLocation filter(!isNull(customer_cc_id)) ~> removeNullCustomersCCID",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['customer_register','customer_cc_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CC_Customer_Filtered_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Filtered_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "ccCustomerFiltered",
+							"description": "ADLS deerh fmcg-filtered container-ees cc_dwh_filtered/cc_dwh_customer_full.csv datag avah process. Ene ni customer datag aguulsan bga"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference"
+							},
+							"name": "ccCustomerDWH"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference"
+							},
+							"name": "ccTradeShopDWH"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CustomerTable",
+							"description": "customer_register (INN), customer_cc_id(OwnerID)-aar groupleed uldsen medeelluudiig aggregate hiigeed customer table gargaj avna."
+						},
+						{
+							"name": "AlterCustomerTable",
+							"description": "Database ruu upsert hiih bolomjiig bii bolgoh"
+						},
+						{
+							"name": "notNullCustomers",
+							"description": "0 (null) registertei bas null owner_id-tai hariltsagchdiig ylgaj avah"
+						},
+						{
+							"name": "CustomerInfoFix",
+							"description": "Customer register ni null, esvel formataas zursun uyd tuuniig '0' bolgoh, format ni 7 orontoi too esvel hunii RD bh ystoi"
+						},
+						{
+							"name": "TradeShopTable",
+							"description": "niit medeellees tradeshop-iin medeelel gargan avch DWH ruu hadgalah"
+						},
+						{
+							"name": "FilterOutUnknownTradeshops"
+						},
+						{
+							"name": "TradeshopFix",
+							"description": "trade_shop_cc_id (cusid)-n utga null bgaa tohioldold nuguuguur ni nuhuh, esvel 0-eer nuhnu"
+						},
+						{
+							"name": "GroupByTradeshop",
+							"description": "Tradeshop datagaa trade_shop_cc_id columnaar grouplej davhardliig arilgana"
+						},
+						{
+							"name": "AlterTradeShopTable"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          cusid_cc as integer,",
+						"          trade_shop_name as string,",
+						"          full_address as string,",
+						"          customer_cc_id as integer,",
+						"          customer_name as string,",
+						"          golden_flag as string,",
+						"          store_type as string,",
+						"          customer_register as string,",
+						"          phone_number as string,",
+						"          buying_power as string,",
+						"          location_segment as short,",
+						"          channel as string,",
+						"          sub_channel as string,",
+						"          sales_team as string,",
+						"          delivery_area as string,",
+						"          channel_id as integer,",
+						"          district as string,",
+						"          khoroo as short,",
+						"          customer_created_date as string,",
+						"          longitude as double,",
+						"          latitude as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> ccCustomerFiltered",
+						"notNullCustomers@notNullCustomers aggregate(groupBy(customer_register,",
+						"          customer_cc_id),",
+						"     customer_name = iifNull(min(customer_name), min(trade_shop_name)),",
+						"          full_address = min(full_address),",
+						"          is_reliable_register = iif(min(customer_register) == '0', 0, 1),",
+						"          golden_flag = max(golden_flag),",
+						"          register_type = iif(regexMatch(min(customer_register),  `^\\d+$`), 1,  0),",
+						"          phone_number = max(phone_number),",
+						"          customer_created_date = min(customer_created_date)) ~> CustomerTable",
+						"CustomerTable alterRow(upsertIf(true())) ~> AlterCustomerTable",
+						"CustomerInfoFix split(!and(customer_register == '0', isNull(customer_cc_id)),",
+						"     disjoint: false) ~> notNullCustomers@(notNullCustomers, nullCustomers)",
+						"ccCustomerFiltered derive(customer_register = trim(iif(length(customer_register) <= 6, '0', iifNull(customer_register, '0'))),",
+						"          register_fixed = iif(length(customer_register) <= 6, 1, iif(customer_register == '1000000', 1, 0))) ~> CustomerInfoFix",
+						"CustomerInfoFix select(mapColumn(",
+						"          trade_shop_cc_id = cusid_cc,",
+						"          trade_shop_name,",
+						"          customer_cc_id,",
+						"          customer_register,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          phone_number,",
+						"          location_segment,",
+						"          e_group_name = channel,",
+						"          store_type,",
+						"          buying_power,",
+						"          sub_channel,",
+						"          sales_team,",
+						"          delivery_area,",
+						"          channel_id,",
+						"          district_subcity = district,",
+						"          sub_district_block = khoroo,",
+						"          trade_shop_created_date = customer_created_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> TradeShopTable",
+						"TradeShopTable filter(!isNull(trade_shop_cc_id)) ~> FilterOutUnknownTradeshops",
+						"FilterOutUnknownTradeshops derive(trade_shop_cc_id = iifNull(trade_shop_cc_id, 0),",
+						"          is_reliable_trade_shop_cc_id = iif(isNull(trade_shop_cc_id), 0, 1)) ~> TradeshopFix",
+						"TradeshopFix aggregate(groupBy(trade_shop_cc_id),",
+						"     trade_shop_name = max(trade_shop_name),",
+						"          is_reliable_trade_shop_ag_id = max(is_reliable_trade_shop_cc_id),",
+						"          full_address = max(full_address),",
+						"          longitude = first(longitude),",
+						"          latitude = first(latitude),",
+						"          phone_number = max(phone_number),",
+						"          store_type = max(store_type),",
+						"          trade_shop_created_date = min(trade_shop_created_date),",
+						"          customer_register = max(customer_register),",
+						"          customer_cc_id = max(customer_cc_id),",
+						"          location_segment = max(location_segment),",
+						"          e_group_name = max(e_group_name),",
+						"          buying_power = max(buying_power),",
+						"          sub_channel = max(sub_channel),",
+						"          sales_team = max(sales_team),",
+						"          delivery_area = max(delivery_area),",
+						"          channel_id = max(channel_id),",
+						"          district_subcity = max(district_subcity),",
+						"          sub_district_block = max(sub_district_block)) ~> GroupByTradeshop",
+						"GroupByTradeshop alterRow(upsertIf(true())) ~> AlterTradeShopTable",
+						"AlterCustomerTable sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['customer_register','customer_cc_id'],",
+						"     format: 'table',",
+						"     batchSize: 5000,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ccCustomerDWH",
+						"AlterTradeShopTable sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['trade_shop_cc_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ccTradeShopDWH"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CC_Customer_Raw_to_Filtered')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "ccRawFullCustomerCSV"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "ccRawTradeShopGpsCSV"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Filtered_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "ccFilteredCSV"
+						}
+					],
+					"transformations": [
+						{
+							"name": "TradeShopIDLeftJoin"
+						},
+						{
+							"name": "ColumnFiltering",
+							"description": "Renaming and (removing) TradeShopIDLeftJoin to ColumnFiltering with columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CUSID as integer,",
+						"          CusName as string,",
+						"          CusAddress as string,",
+						"          OwnerID as integer,",
+						"          OwnerName as string,",
+						"          GoldenFlag as string,",
+						"          StoreType as string,",
+						"          INN as string,",
+						"          Phone as string,",
+						"          BuyingPower as string,",
+						"          LocationSegment as integer,",
+						"          Channel as string,",
+						"          Image as string,",
+						"          SubChannel as string,",
+						"          SalesTeam as string,",
+						"          DeliveryArea as string,",
+						"          ChannelID as integer,",
+						"          District as string,",
+						"          Khoroo as short,",
+						"          CreateDate as string,",
+						"          UpdateDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> ccRawFullCustomerCSV",
+						"source(output(",
+						"          TradeshopID as integer,",
+						"          CreatedDate as string,",
+						"          UpdatedDate as string,",
+						"          UID as string,",
+						"          Longitude as double,",
+						"          Latitude as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> ccRawTradeShopGpsCSV",
+						"ccRawFullCustomerCSV, ccRawTradeShopGpsCSV join(CUSID == TradeshopID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'off')~> TradeShopIDLeftJoin",
+						"TradeShopIDLeftJoin select(mapColumn(",
+						"          cusid_cc = CUSID,",
+						"          trade_shop_name = CusName,",
+						"          full_address = CusAddress,",
+						"          customer_cc_id = OwnerID,",
+						"          customer_name = OwnerName,",
+						"          golden_flag = GoldenFlag,",
+						"          store_type = StoreType,",
+						"          customer_register = INN,",
+						"          phone_number = Phone,",
+						"          buying_power = BuyingPower,",
+						"          location_segment = LocationSegment,",
+						"          channel = Channel,",
+						"          sub_channel = SubChannel,",
+						"          sales_team = SalesTeam,",
+						"          delivery_area = DeliveryArea,",
+						"          channel_id = ChannelID,",
+						"          district = District,",
+						"          khoroo = Khoroo,",
+						"          customer_created_date = CreateDate,",
+						"          longitude = Longitude,",
+						"          latitude = Latitude",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ColumnFiltering",
+						"ColumnFiltering sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['cc_dwh_customer_full.csv'],",
+						"     umask: 0775,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> ccFilteredCSV"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CC_TradeShop_DWH_to_DataService')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference"
+							},
+							"name": "ccDwhTradeShopTable"
+						},
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "addressFromDataServiceTable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DataService_TestMerchant",
+								"type": "DatasetReference"
+							},
+							"name": "saveToMerchantDB"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectRequiredFields",
+							"description": "Data Service-iin customer_ag_info table-d hadgalj boloh medeelluudiig gargan avah process"
+						},
+						{
+							"name": "locationInfoProcessing"
+						},
+						{
+							"name": "separateAddressByLevel",
+							"description": "loc_name-g aimag_hot, duureg_sum, bag_khoroo gesen hesguuded huvaana"
+						},
+						{
+							"name": "makeAddressList",
+							"description": "aimag_hot, duureg_sum, bag_khoroo tus buriinh ni huvid list uusgene, uuniig ashiglan customer datanaas haygiin medeelel gargan avna"
+						},
+						{
+							"name": "customerWithLocationList"
+						},
+						{
+							"name": "locationCapturing",
+							"description": "aimag_hot, duureg_sum, bag_khoroo-nii medeelliig dataservice-iin DB deerh location table-tai matchlaad taarch bgaag ni ylgaj avna"
+						},
+						{
+							"name": "selectFieldForDB"
+						},
+						{
+							"name": "additionalFixOnLocation",
+							"description": "capitalize\nUlaanbaatriinh bish bol bag_khoroo-nii medeelliig hasah"
+						},
+						{
+							"name": "addressFixDistrictCityAbbr1",
+							"description": "УБ СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "addressFixDistrictAbbr1",
+							"description": "СХД => Улаанбаатар, Сонгинохайрхан дүүрэг geh meteer haygiig tovchilj bichsen bgaag zasah"
+						},
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          trade_shop_cc_id as integer,",
+						"          trade_shop_name as string,",
+						"          is_reliable_trade_shop_cc_id as integer,",
+						"          customer_cc_id as integer,",
+						"          customer_register as string,",
+						"          full_address as string,",
+						"          longitude as double,",
+						"          latitude as double,",
+						"          phone_number as string,",
+						"          location_segment as integer,",
+						"          e_group_name as string,",
+						"          store_type as string,",
+						"          buying_power as string,",
+						"          sub_channel as string,",
+						"          sales_team as string,",
+						"          delivery_area as string,",
+						"          channel_id as integer,",
+						"          province_city as string,",
+						"          district_subcity as string,",
+						"          sub_district_block as string,",
+						"          trade_shop_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ccDwhTradeShopTable",
+						"source(output(",
+						"          id as integer,",
+						"          loc_name as string,",
+						"          full_address as string,",
+						"          lvl as integer,",
+						"          eb_id as string,",
+						"          parent_id as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> addressFromDataServiceTable",
+						"ccDwhTradeShopTable select(mapColumn(",
+						"          trade_shop_cc_id,",
+						"          customer_cc_id,",
+						"          trade_shop_name,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          e_group_name,",
+						"          operation_start_date = trade_shop_created_date,",
+						"          trade_shop_created_date,",
+						"          customer_register",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectRequiredFields",
+						"addressFixDistrictAbbr1 derive(aimag_hot = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 1)),",
+						"          duureg_sum = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 2)),",
+						"          bag_khoroo = iif(isNull(at(split(fixed_address, ','), 3)), toString(null()), at(split(fixed_address, ','), 3)),",
+						"          join_col = 1) ~> locationInfoProcessing",
+						"addressFromDataServiceTable derive(aimag_hot_list = iif(lvl == 1, lower(loc_name), toString(null())),",
+						"          duureg_sum_list = iif(lvl == 2, lower(loc_name), toString(null())),",
+						"          bag_khoroo_list = iif(lvl == 3, lower(loc_name), toString(null())),",
+						"          join_col = 1) ~> separateAddressByLevel",
+						"separateAddressByLevel aggregate(aimag_hot_list = collectUnique(aimag_hot_list),",
+						"          duureg_sum_list = collectUnique(duureg_sum_list),",
+						"          bag_khoroo_list = collectUnique(bag_khoroo_list),",
+						"          join_col = max(join_col)) ~> makeAddressList",
+						"locationInfoProcessing, makeAddressList join(locationInfoProcessing@join_col == makeAddressList@join_col,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> customerWithLocationList",
+						"customerWithLocationList derive(aimag_hot = toString(at(intersect(split(lower(aimag_hot), ' '), aimag_hot_list), 1)),",
+						"          duureg_sum = toString(at(intersect(split(lower(duureg_sum), ' '), duureg_sum_list), 1)),",
+						"          bag_khoroo = iif(\r",
+						"    instr(bag_khoroo, '-р хороо ') != 0,\r",
+						"    toInteger(at(split(bag_khoroo, '-р хороо '), 1)), \r",
+						"    iif(\r",
+						"        instr(bag_khoroo, '-р хороо,') != 0,\r",
+						"        toInteger(at(split(bag_khoroo, '-р хороо,'), 1)),\r",
+						"        iif(\r",
+						"            instr(bag_khoroo, 'хороо ') != 0,\r",
+						"            toInteger(at(split(bag_khoroo, 'хороо '), 1)),\r",
+						"            iif(isInteger(bag_khoroo), toInteger(bag_khoroo), toInteger(null()))\r",
+						"        )\r",
+						"    )\r",
+						")) ~> locationCapturing",
+						"locationCapturing select(mapColumn(",
+						"          trade_shop_cc_id,",
+						"          customer_cc_id,",
+						"          customer_register,",
+						"          trade_shop_name,",
+						"          aimag_hot,",
+						"          duureg_sum,",
+						"          bag_khoroo,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          e_group_name,",
+						"          operation_start_date,",
+						"          trade_shop_created_date = operation_start_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectFieldForDB",
+						"selectFieldForDB derive(aimag_hot = replace(initCap(replace(aimag_hot, '-', ' ')), ' ', '-'),",
+						"          duureg_sum = replace(initCap(replace(duureg_sum, '-', ' ')), ' ', '-'),",
+						"          bag_khoroo = iif(aimag_hot =='улаанбаатар', bag_khoroo, toInteger(null())),",
+						"          trade_shop_created_date = operation_start_date) ~> additionalFixOnLocation",
+						"selectRequiredFields derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        replace(\r",
+						"                            replace(\r",
+						"                                replace(\r",
+						"                                    lower(full_address), 'УБ НД', 'Улаанбаатар, Налайх дүүрэг,'\r",
+						"                                ), 'УБ БНД', 'Улаанбаатар, Багануур дүүрэг,'\r",
+						"                            ), 'УБ БХД', 'Улаанбаатар, Багахангай дүүрэг,'\r",
+						"                        ), 'УБ ЧД', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'УБ СБД', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'УБ СХД', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'УБ ХУД', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'УБ БЗД', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'УБ БГД', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictCityAbbr1",
+						"addressFixDistrictCityAbbr1 derive(fixed_address = replace(\r",
+						"    replace(\r",
+						"        replace(\r",
+						"            replace(\r",
+						"                replace(\r",
+						"                    replace(\r",
+						"                        fixed_address, 'чд ', 'Улаанбаатар, Чингэлтэй дүүрэг,'\r",
+						"                    ), 'сбд', 'Улаанбаатар, Сүхбаатар дүүрэг,'\r",
+						"                ), 'схд', 'Улаанбаатар, Сонгинохайрхан дүүрэг,'\r",
+						"            ), 'худ ', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
+						"        ), 'бзд', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
+						"    ), 'бгд', 'Улаанбаатар, Баянгол дүүрэг,'\r",
+						")) ~> addressFixDistrictAbbr1",
+						"additionalFixOnLocation alterRow(upsertIf(true())) ~> AlterRow1",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['trade_shop_cc_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> saveToMerchantDB"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeProfile_From_GreenHR')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingEmployees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "Employee",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerivedColumns"
+						},
+						{
+							"name": "leftOuterJoin"
+						},
+						{
+							"name": "FilterNewOnlys"
+						},
+						{
+							"name": "selectExist"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as short,",
+						"          status_date as string,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          id as integer,",
+						"          rn as string,",
+						"          oid as string,",
+						"          source as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT id, rn, oid,source FROM employee_profile WHERE source = 0',",
+						"     format: 'query') ~> existingEmployees",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1, \r",
+						"    iif(status == 'Ажлаас Гарсан', 2, \r",
+						"        iif(status == 'Шилжсэн', 2, \r",
+						"            iif(status == 'Түр Эзгүй', 3, toInteger(null()))\r",
+						"        )\r",
+						"    )\r",
+						"),",
+						"          is_foreigner = iif(is_foreigner, 1, 0),",
+						"          source = 0) ~> DerivedColumns",
+						"DerivedColumns, selectExist join(rn == rn_exist",
+						"     && oid == oid_exist,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> leftOuterJoin",
+						"leftOuterJoin filter(isNull(rn_exist)) ~> FilterNewOnlys",
+						"existingEmployees select(mapColumn(",
+						"          rn_exist = rn,",
+						"          oid_exist = oid,",
+						"          source_exist = source",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectExist",
+						"FilterNewOnlys alterRow(upsertIf(isNull(rn_exist)||source==0)) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['rn',(oid),'source'],",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> Employee"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeProfile_From_GreenHR_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingSource0"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "insertNewEmployees",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "deleteOldSource0"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "extractNumberFromGname"
+						},
+						{
+							"name": "joinWithAllExisting"
+						},
+						{
+							"name": "filterOnlyNewEmployees"
+						},
+						{
+							"name": "selectAllSourcesKeys"
+						},
+						{
+							"name": "selectSource0Keys"
+						},
+						{
+							"name": "markForInsert"
+						},
+						{
+							"name": "markForDelete"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid FROM employee_profile',",
+						"     format: 'query') ~> existingAllSources",
+						"source(output(",
+						"          id as integer,",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT id, rn, oid FROM employee_profile WHERE source = 0',",
+						"     format: 'query') ~> existingSource0",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1,",
+						"            iif(status == 'Ажлаас Гарсан', 2,",
+						"                iif(status == 'Шилжсэн', 2,",
+						"                    iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid))) ~> transformStatusAndSource",
+						"extractNumberFromGname aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"transformStatusAndSource derive(gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> extractNumberFromGname",
+						"removeDuplicatesInSource, selectAllSourcesKeys join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithAllExisting",
+						"joinWithAllExisting filter(isNull(existing_rn)) ~> filterOnlyNewEmployees",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectAllSourcesKeys",
+						"existingSource0 select(mapColumn(",
+						"          delete_id = id,",
+						"          delete_rn = rn,",
+						"          delete_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSource0Keys",
+						"filterOnlyNewEmployees alterRow(insertIf(true())) ~> markForInsert",
+						"selectSource0Keys alterRow(deleteIf(true())) ~> markForDelete",
+						"markForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 2) ~> insertNewEmployees",
+						"joinWithAllExisting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['employee_monthly_load.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> archiveToDataLake",
+						"markForDelete sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:true,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     keys:['delete_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1) ~> deleteOldSource0"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeProfile_deletes')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingSource0"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "deleteOldSource0"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectSource0Keys"
+						},
+						{
+							"name": "markForDelete"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT id, rn, oid FROM employee_profile WHERE source = 0',",
+						"     format: 'query') ~> existingSource0",
+						"existingSource0 select(mapColumn(",
+						"          id,",
+						"          delete_rn = rn,",
+						"          delete_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSource0Keys",
+						"selectSource0Keys alterRow(deleteIf(true())) ~> markForDelete",
+						"markForDelete sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:true,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     keys:['id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 0) ~> deleteOldSource0"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Employee_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_EMPLOYEE",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService1",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EMPID as string,",
+						"          CODE as string,",
+						"          FAMILYNAME as string,",
+						"          LASTNAME as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          BIRTHDATE as string,",
+						"          BIRTHCOUNTRYID as string,",
+						"          BIRTHDIVISIONID as string,",
+						"          BIRTHDISTRICTID as string,",
+						"          BIRTHPLACE as string,",
+						"          COUNTRYID as string,",
+						"          DIVISIONID as string,",
+						"          DISTRICTID as string,",
+						"          NATIONALITYID as string,",
+						"          SOCIALORIGINID as string,",
+						"          MARITALSTATUS as string,",
+						"          BLOODGROUP as string,",
+						"          REGNO as string,",
+						"          PASSNO as string,",
+						"          FORPASSNO as string,",
+						"          EMDNO as string,",
+						"          NDDNO as string,",
+						"          ADDR1 as string,",
+						"          ADDR2 as string,",
+						"          HOMEPHONE as string,",
+						"          MOBILEPHONE as string,",
+						"          WORKPHONE as string,",
+						"          WORKPHONEEXT as string,",
+						"          FAX as string,",
+						"          EMAIL as string,",
+						"          POSTADDRESS as string,",
+						"          CONTACTNAME as string,",
+						"          CONTACTPHONE as string,",
+						"          WITHPICTURE as string,",
+						"          STATUS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as string,",
+						"          COMPANYID as string,",
+						"          STATUSDATE as string,",
+						"          LASTNAMELENGTH as string,",
+						"          EMAIL2 as string,",
+						"          CONTACTNAME2 as string,",
+						"          CONTACTPHONE2 as string,",
+						"          ISBLACKLISTED as string,",
+						"          BLACKLISTREASON as string,",
+						"          BLACKLISTEDDATE as string,",
+						"          ISFOREIGNER as string,",
+						"          CONTACTID as string,",
+						"          MILITARYSERVED as string,",
+						"          TRAININGSPORT as string,",
+						"          INTEREST as string,",
+						"          APPID as string,",
+						"          MILITARYNO as string,",
+						"          RELATIVEID as string,",
+						"          RELATIVEID2 as string,",
+						"          MILITARYCLOSETYPE as string,",
+						"          MILITARYCOMMENT as string,",
+						"          LINKEDIN as string,",
+						"          FACEBOOK as string,",
+						"          TWITTER as string,",
+						"          ISSPYOATH as string,",
+						"          SPYOATHDATE as string,",
+						"          ISGOVERNMENTOATH as string,",
+						"          GOVERNMENTOATHDATE as string,",
+						"          ISMILITARYOATH as string,",
+						"          MILITARYOATHDATE as string,",
+						"          LINKID as string,",
+						"          ISRESIDENT as string,",
+						"          CIVILID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = '0',",
+						"          source_employee_id = EMPID,",
+						"          company_id = iif(isNull(COMPANYID),\"NO\",COMPANYID),",
+						"          employee_code = CODE,",
+						"          registration_number = REGNO,",
+						"          family_name = FAMILYNAME,",
+						"          last_name = LASTNAME,",
+						"          first_name = FIRSTNAME,",
+						"          birth_date = toDate(BIRTHDATE, 'yyyy.MM.dd'),",
+						"          nationality_id = toInteger(NATIONALITYID),",
+						"          employment_status = iif(isNull(STATUS),\"NO\",STATUS),",
+						"          effective_start_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          effective_end_date = toTimestamp('9999-12-31 23:59:59'),",
+						"          is_current_record = toInteger(1),",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          etl_batch_id = toLong(0),",
+						"          length_regno = length(REGNO)) ~> transform1",
+						"transform1 select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          employee_key as long,",
+						"          source_system_code as string,",
+						"          source_employee_id as string,",
+						"          company_id as integer,",
+						"          employee_code as string,",
+						"          registration_number as string,",
+						"          family_name as string,",
+						"          last_name as string,",
+						"          first_name as string,",
+						"          gender as string,",
+						"          birth_date as date,",
+						"          nationality_id as integer,",
+						"          employment_status as string,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1,",
+						"     preCommands: [],",
+						"     postCommands: []) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/From_Staging_to_DWH_TBLDEPARTMENT')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLDEPARTMENT",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Department",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joined"
+						},
+						{
+							"name": "derivedclean"
+						},
+						{
+							"name": "scdMark"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     cwfolder as string (\"TBLDEPARTMENT\"),",
+						"     cwtablename as string (\"dim_department\")",
+						"}",
+						"source(output(",
+						"          DEPID as short,",
+						"          DEPCODE as string,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          PARENTID as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          COMPANYID as string,",
+						"          DEPTYPEID as short,",
+						"          PATH as string,",
+						"          PARENTPATH as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source(output(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"source1, source2 join(COMPANYID == company_code,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joined",
+						"joined derive(source_department_id = toString(DEPID),",
+						"          department_code = toString(DEPCODE),",
+						"          department_name = trim(NAME),",
+						"          department_type_id = DEPTYPEID,",
+						"          parent_department_key_raw = trim(PARENTID),",
+						"          raw_parent_path = iif(isNull(PARENTPATH) || trim(PARENTPATH) == '', '', trim(PARENTPATH)),",
+						"          clean_parent_path = iif(PARENTPATH == '', '', trim(replace(replace(PARENTPATH, '|', '/'), '//', '/'))),",
+						"          department_path = iif(isNull(PATH) || trim(PATH) == '', '', trim(replace(replace(PATH, '|', '/'), '//', '/'))),",
+						"          is_active_int = iif(ISACTIVE == true(), 1, 0),",
+						"          effective_start_date = iif(isNull(CREATED), currentUTC(), toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          effective_end_date = iif(isNull(UPDATED), toTimestamp('9999-12-31T00:00:00Z'), toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          etl_batch_id = toLong(currentUTC()),",
+						"          company_key = company_key,",
+						"          company_code = company_code) ~> derivedclean",
+						"derivedclean derive(business_hash = md5(concat(",
+						"        iifNull(department_code, ''), '|',",
+						"        iifNull(department_name, ''), '|',",
+						"        iifNull(toString(department_type_id), ''), '|',",
+						"        iifNull(parent_department_key_raw, ''), '|',",
+						"        iifNull(department_path, ''), '|',",
+						"        iifNull(toString(is_active_int), ''), '|',",
+						"        iifNull(toString(effective_start_date), ''), '|',",
+						"        iifNull(toString(effective_end_date), '')",
+						"    ) )) ~> scdMark",
+						"scdMark sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          department_key as integer,",
+						"          source_system_code as string,",
+						"          source_department_id as string,",
+						"          company_key as integer,",
+						"          department_code as string,",
+						"          department_name as string,",
+						"          parent_department_key as integer,",
+						"          department_level as string,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     upsertKeyColumns: ['source_department_id','company_key']) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HREmployee_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable1_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sourcesystemcode"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EMPID as string,",
+						"          CODE as string,",
+						"          FAMILYNAME as string,",
+						"          LASTNAME as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          BIRTHDATE as string,",
+						"          BIRTHCOUNTRYID as string,",
+						"          BIRTHDIVISIONID as string,",
+						"          BIRTHDISTRICTID as string,",
+						"          BIRTHPLACE as string,",
+						"          COUNTRYID as string,",
+						"          DIVISIONID as string,",
+						"          DISTRICTID as string,",
+						"          NATIONALITYID as string,",
+						"          SOCIALORIGINID as string,",
+						"          MARITALSTATUS as string,",
+						"          BLOODGROUP as string,",
+						"          REGNO as string,",
+						"          PASSNO as string,",
+						"          FORPASSNO as string,",
+						"          EMDNO as string,",
+						"          NDDNO as string,",
+						"          ADDR1 as string,",
+						"          ADDR2 as string,",
+						"          HOMEPHONE as string,",
+						"          MOBILEPHONE as string,",
+						"          WORKPHONE as string,",
+						"          WORKPHONEEXT as string,",
+						"          FAX as string,",
+						"          EMAIL as string,",
+						"          POSTADDRESS as string,",
+						"          CONTACTNAME as string,",
+						"          CONTACTPHONE as string,",
+						"          WITHPICTURE as string,",
+						"          STATUS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as string,",
+						"          COMPANYID as string,",
+						"          STATUSDATE as string,",
+						"          LASTNAMELENGTH as string,",
+						"          EMAIL2 as string,",
+						"          CONTACTNAME2 as string,",
+						"          CONTACTPHONE2 as string,",
+						"          ISBLACKLISTED as string,",
+						"          BLACKLISTREASON as string,",
+						"          BLACKLISTEDDATE as string,",
+						"          ISFOREIGNER as string,",
+						"          CONTACTID as string,",
+						"          MILITARYSERVED as string,",
+						"          TRAININGSPORT as string,",
+						"          INTEREST as string,",
+						"          APPID as string,",
+						"          MILITARYNO as string,",
+						"          RELATIVEID as string,",
+						"          RELATIVEID2 as string,",
+						"          MILITARYCLOSETYPE as string,",
+						"          MILITARYCOMMENT as string,",
+						"          LINKEDIN as string,",
+						"          FACEBOOK as string,",
+						"          TWITTER as string,",
+						"          ISSPYOATH as string,",
+						"          SPYOATHDATE as string,",
+						"          ISGOVERNMENTOATH as string,",
+						"          GOVERNMENTOATHDATE as string,",
+						"          ISMILITARYOATH as string,",
+						"          MILITARYOATHDATE as string,",
+						"          LINKID as string,",
+						"          ISRESIDENT as string,",
+						"          CIVILID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = 0,",
+						"          COMPANYID = iif(isNull(COMPANYID), 'MCK', COMPANYID),",
+						"          source_employee_id = iif(isNull(EMPID), 'unknown_id', toString(EMPID) )) ~> sourcesystemcode",
+						"sourcesystemcode sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          employee_key as long,",
+						"          source_system_code as string,",
+						"          source_employee_id as string,",
+						"          company_id as string,",
+						"          employee_code as string,",
+						"          registration_number as string,",
+						"          family_name as string,",
+						"          last_name as string,",
+						"          first_name as string,",
+						"          gender as string,",
+						"          birth_date as date,",
+						"          nationality_id as integer,",
+						"          employment_status as string,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          each(match(/* All input columns */true()),",
+						"               /* Input name */$$ = $$)",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SIGRADE_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_SIGRADE",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Grade",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          GRADEID as short,",
+						"          CODE as string,",
+						"          GRADENO as short,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          grade_id = GRADEID,",
+						"          grade_no = GRADENO,",
+						"          code = CODE,",
+						"          name = NAME) ~> transform1",
+						"transform1 select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          grade_key as integer,",
+						"          grade_id as integer,",
+						"          code as string,",
+						"          grade_no as integer,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1,",
+						"     preCommands: [],",
+						"     postCommands: []) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SILEVEL_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_SILEVEL",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_SILEVEL",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          LEVELID as short,",
+						"          CODE as string,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          level_id = LEVELID,",
+						"          code = CODE,",
+						"          is_active = toInteger(1),",
+						"          name = NAME) ~> transform1",
+						"transform1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          level_key as integer,",
+						"          level_id as integer,",
+						"          code as string,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TBLCOMPANY_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLCOMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPANYID as string,",
+						"          NAME as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          PARENTID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(company_code = COMPANYID,",
+						"          company_name = NAME,",
+						"          is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED),",
+						"          source_updated_date = toTimestamp(UPDATED),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC()) ~> transform1",
+						"transform1 select(mapColumn(",
+						"          company_code,",
+						"          company_name,",
+						"          is_active,",
+						"          source_system_code,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TBLEMPEMPLHIST_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLEMPEMPLHIST",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_EMPLOYEE",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source3"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Department",
+								"type": "DatasetReference"
+							},
+							"name": "source4"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable1_POSITION",
+								"type": "DatasetReference"
+							},
+							"name": "source5"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Grade",
+								"type": "DatasetReference"
+							},
+							"name": "source6"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_SILEVEL",
+								"type": "DatasetReference"
+							},
+							"name": "source7"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Fact_employee_hist",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sourcesystemcode"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "joinEmployee"
+						},
+						{
+							"name": "selectEmployee"
+						},
+						{
+							"name": "joinCompany"
+						},
+						{
+							"name": "selectCompany"
+						},
+						{
+							"name": "select4"
+						},
+						{
+							"name": "joinDepartment"
+						},
+						{
+							"name": "selectPosition"
+						},
+						{
+							"name": "joinPosition"
+						},
+						{
+							"name": "select6Grade"
+						},
+						{
+							"name": "selectLevel"
+						},
+						{
+							"name": "joinWithGrade"
+						},
+						{
+							"name": "joinWithLevel"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     cwfolder as string (\"TBLEMPEMPLHIST\")",
+						"}",
+						"source(output(",
+						"          HISTORYID as integer,",
+						"          EMPID as short,",
+						"          BEGINDATE as string,",
+						"          ENDDATE as string,",
+						"          ORDERID as short,",
+						"          ORDERTYPE as string,",
+						"          COMPANYID as string,",
+						"          DEPID as short,",
+						"          POSITIONID as short,",
+						"          GRADEID as short,",
+						"          LEVELID as short,",
+						"          BASEWAGE as integer,",
+						"          BASEWAGECURRCODE as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          ORDERNO as string,",
+						"          OLDDEPNAME as string,",
+						"          JOBID as short,",
+						"          INSURETYPEID as short,",
+						"          LABOURCONDITION as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source(output(",
+						"          employee_key as long,",
+						"          source_system_code as string,",
+						"          source_employee_id as string,",
+						"          company_id as string,",
+						"          employee_code as string,",
+						"          registration_number as string,",
+						"          family_name as string,",
+						"          last_name as string,",
+						"          first_name as string,",
+						"          gender as string,",
+						"          birth_date as date,",
+						"          nationality_id as integer,",
+						"          employment_status as string,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"source(output(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source3",
+						"source(output(",
+						"          department_key as integer,",
+						"          source_system_code as string,",
+						"          source_department_id as string,",
+						"          company_key as integer,",
+						"          department_code as string,",
+						"          department_name as string,",
+						"          parent_department_key as integer,",
+						"          department_level as string,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source4",
+						"source(output(",
+						"          position_key as integer,",
+						"          source_system_code as string,",
+						"          source_position_id as string,",
+						"          company_key as integer,",
+						"          position_code as string,",
+						"          position_name as string,",
+						"          position_category as string,",
+						"          position_level as string,",
+						"          is_management as integer,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source5",
+						"source(output(",
+						"          grade_key as integer,",
+						"          grade_id as integer,",
+						"          code as string,",
+						"          grade_no as integer,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source6",
+						"source(output(",
+						"          level_key as integer,",
+						"          level_id as integer,",
+						"          code as string,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source7",
+						"joinWithLevel derive(source_system_code = 0,",
+						"          is_current_position = true(),",
+						"          is_multiple = 1,",
+						"          is_active_employment = 1,",
+						"          begin_date = toDate(BEGINDATE, 'yyyy-MM-dd'),",
+						"          end_date = toDate(ENDDATE, 'yyyy-MM-dd'),",
+						"          source_history_id = HISTORYID,",
+						"          source_order_id = ORDERID,",
+						"          order_type = ORDERTYPE,",
+						"          order_number = ORDERNO,",
+						"          level_number = LEVELID,",
+						"          base_wage = BASEWAGE,",
+						"          base_wage_currency = BASEWAGECURRCODE,",
+						"          insurance_type_id = INSURETYPEID,",
+						"          labour_condition = LABOURCONDITION,",
+						"          source_created_date = toTimestamp(CREATED),",
+						"          source_updated_date = toTimestamp(UPDATED),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          etl_batch_id = toLong(currentUTC())) ~> sourcesystemcode",
+						"source1 filter(COMPANYID==\"AG\") ~> filter1",
+						"filter1, selectEmployee join(toString(EMPID) == source_employee_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinEmployee",
+						"source2 select(mapColumn(",
+						"          employee_key,",
+						"          source_employee_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectEmployee",
+						"joinEmployee, selectCompany join(COMPANYID == company_code,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinCompany",
+						"source3 select(mapColumn(",
+						"          company_key,",
+						"          company_code",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectCompany",
+						"source4 select(mapColumn(",
+						"          department_key,",
+						"          source_department_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select4",
+						"joinCompany, select4 join(toString(DEPID) == source_department_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinDepartment",
+						"source5 select(mapColumn(",
+						"          position_key,",
+						"          source_system_code,",
+						"          source_position_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectPosition",
+						"joinDepartment, selectPosition join(toString(POSITIONID) == source_position_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinPosition",
+						"source6 select(mapColumn(",
+						"          grade_key,",
+						"          grade_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select6Grade",
+						"source7 select(mapColumn(",
+						"          level_key,",
+						"          level_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectLevel",
+						"joinPosition, select6Grade join(GRADEID == grade_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithGrade",
+						"joinWithGrade, selectLevel join(LEVELID == level_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithLevel",
+						"sourcesystemcode sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          history_fact_key as long,",
+						"          employee_key as long,",
+						"          company_key as integer,",
+						"          department_key as integer,",
+						"          position_key as integer,",
+						"          grade_key as integer,",
+						"          level_key as integer,",
+						"          begin_date as date,",
+						"          end_date as date,",
+						"          source_system_code as string,",
+						"          source_history_id as string,",
+						"          source_employee_id as string,",
+						"          source_order_id as string,",
+						"          order_type as string,",
+						"          order_number as string,",
+						"          level_number as integer,",
+						"          base_wage as decimal(18,2),",
+						"          base_wage_currency as string,",
+						"          insurance_type_id as integer,",
+						"          labour_condition as string,",
+						"          is_current_position as integer,",
+						"          is_active_employment as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     mapColumn(",
+						"          employee_key,",
+						"          company_key,",
+						"          department_key,",
+						"          position_key,",
+						"          grade_key,",
+						"          level_key,",
+						"          begin_date,",
+						"          end_date,",
+						"          source_employee_id,",
+						"          order_type = ORDERTYPE,",
+						"          order_number = ORDERNO,",
+						"          level_number = LEVELID,",
+						"          base_wage = BASEWAGE,",
+						"          base_wage_currency = BASEWAGECURRCODE,",
+						"          insurance_type_id = INSURETYPEID,",
+						"          labour_condition = LABOURCONDITION,",
+						"          is_current_position,",
+						"          is_active_employment,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date,",
+						"          etl_batch_id",
+						"     ),",
+						"     preCommands: [],",
+						"     postCommands: []) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TBLPOSITION_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLPOSITION",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable1_POSITION",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sourcesystemcode"
+						},
+						{
+							"name": "renamecols"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "join1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     cwfolder as string (\"TBLPOSITION\"),",
+						"     cwtablename as string (\"dim_position\")",
+						"}",
+						"source(output(",
+						"          POSITIONID as short,",
+						"          COMPANYID as string,",
+						"          DEPID as short,",
+						"          POSGROUPID as short,",
+						"          CODE as string,",
+						"          NAME as string,",
+						"          EMPLOYMENTTYPEID as short,",
+						"          GRADEID as short,",
+						"          VACANCYDAYS as short,",
+						"          LABOURCONDITION as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          JOBDESCID as short,",
+						"          JOBID as short,",
+						"          TYPE as string,",
+						"          POSITIONOCCID as short,",
+						"          POSLEVEL as short",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source(output(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"join1 derive(COMPANYID = iif(isNull(COMPANYID), 'MCK', COMPANYID),",
+						"          source_system_code = 0,",
+						"          ISACTIVE_INT = iif(ISACTIVE, 1, 0),",
+						"          company_key = company_key) ~> sourcesystemcode",
+						"sourcesystemcode derive(source_position_id = toString(POSITIONID),",
+						"          position_code = CODE,",
+						"          position_name = NAME,",
+						"          position_category = TYPE,",
+						"          position_level = toString(POSLEVEL),",
+						"          is_management = toInteger(iif(POSLEVEL <= 2, 1, 0)),",
+						"          is_active = toInteger(ISACTIVE_INT),",
+						"          effective_start_date = iif(isNull(CREATED), currentUTC(), toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          effective_end_date = iif(isNull(UPDATED), toTimestamp('9999-12-31T00:00:00Z'), toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          is_current_record = toInteger(1),",
+						"          dw_created_date = currentTimestamp(),",
+						"          dw_updated_date = currentTimestamp()) ~> renamecols",
+						"renamecols select(mapColumn(",
+						"          source_system_code,",
+						"          source_position_id,",
+						"          company_key,",
+						"          position_code,",
+						"          position_name,",
+						"          position_category,",
+						"          position_level,",
+						"          is_management,",
+						"          is_active,",
+						"          effective_start_date,",
+						"          effective_end_date,",
+						"          is_current_record,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"source1, source2 join(COMPANYID == company_code,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          position_key as integer,",
+						"          source_system_code as string,",
+						"          source_position_id as string,",
+						"          company_key as integer,",
+						"          position_code as string,",
+						"          position_name as string,",
+						"          position_category as string,",
+						"          position_level as string,",
+						"          is_management as integer,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TD_Customer_Raw_to_Filtered')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "TD"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdRawFullCustomerCSV"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdRawTradeShopGpsCSV"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Filtered_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdFilteredCSV"
+						}
+					],
+					"transformations": [
+						{
+							"name": "TradeShopIDLeftJoin"
+						},
+						{
+							"name": "ColumnFiltering",
+							"description": "Renaming and (removing) TradeShopIDLeftJoin to ColumnFiltering with columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CusID as integer,",
+						"          CusName as string,",
+						"          cusAddress as string,",
+						"          ISISChannelID as short,",
+						"          OwnerID as integer,",
+						"          OwnerName as string,",
+						"          INN as string,",
+						"          StoreTypeName as string,",
+						"          Region as string,",
+						"          SumNer as string,",
+						"          CreateDate as string,",
+						"          UpdateDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> tdRawFullCustomerCSV",
+						"source(output(",
+						"          TradeshopID as integer,",
+						"          CreatedDate as string,",
+						"          UpdatedDate as string,",
+						"          pickpackid as string,",
+						"          Longitude as string,",
+						"          Latitude as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> tdRawTradeShopGpsCSV",
+						"tdRawFullCustomerCSV, tdRawTradeShopGpsCSV join(CusID == TradeshopID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'off')~> TradeShopIDLeftJoin",
+						"TradeShopIDLeftJoin select(mapColumn(",
+						"          cusid_td = CusID,",
+						"          trade_shop_name = CusName,",
+						"          full_address = cusAddress,",
+						"          customer_td_id = OwnerID,",
+						"          customer_name = OwnerName,",
+						"          store_type = StoreTypeName,",
+						"          customer_register = INN,",
+						"          channel_id = ISISChannelID,",
+						"          district = Region,",
+						"          khoroo = SumNer,",
+						"          customer_created_date = CreateDate,",
+						"          longitude = Longitude,",
+						"          latitude = Latitude",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ColumnFiltering",
+						"ColumnFiltering sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['td_dwh_customer_full.csv'],",
+						"     umask: 0775,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> tdFilteredCSV"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_evs_allemployee')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "insertNewEmployees",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "extractNumberFromGname"
+						},
+						{
+							"name": "joinWithAllExisting"
+						},
+						{
+							"name": "filterOnlyNewEmployees"
+						},
+						{
+							"name": "selectAllSourcesKeys"
+						},
+						{
+							"name": "markForInsert"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid FROM employee_profile_temp',",
+						"     format: 'query') ~> existingAllSources",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1,",
+						"            iif(status == 'Ажлаас Гарсан', 2,",
+						"                iif(status == 'Шилжсэн', 2,",
+						"                    iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid))) ~> transformStatusAndSource",
+						"extractNumberFromGname aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"transformStatusAndSource derive(gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> extractNumberFromGname",
+						"removeDuplicatesInSource, selectAllSourcesKeys join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithAllExisting",
+						"joinWithAllExisting filter(isNull(existing_rn)) ~> filterOnlyNewEmployees",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectAllSourcesKeys",
+						"filterOnlyNewEmployees alterRow(insertIf(true())) ~> markForInsert",
+						"markForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     preSQLs:['DELETE FROM employee_profile_temp WHERE source = 0 OR source = \\'0\\''],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> insertNewEmployees",
+						"joinWithAllExisting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['employee_monthly_load.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> archiveToDataLake"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_evs_allemployee_upsert')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "upsertEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "logSkippedMigrated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "joinWithSource"
+						},
+						{
+							"name": "skipStream"
+						},
+						{
+							"name": "existingAlls"
+						},
+						{
+							"name": "markForInsert"
+						},
+						{
+							"name": "markForUpdate"
+						},
+						{
+							"name": "combinedStream"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string,",
+						"          source as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid, source FROM employee_profile',",
+						"     format: 'query') ~> existingAllSources",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1, iif(status == 'Ажлаас Гарсан', 2, iif(status == 'Шилжсэн', 2, iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid)),",
+						"          gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> transformStatusAndSource",
+						"transformStatusAndSource aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"removeDuplicatesInSource, existingAlls join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithSource",
+						"joinWithSource split(isNull(existing_rn),",
+						"     !isNull(existing_rn) && existing_source == 0,",
+						"     disjoint: false) ~> skipStream@(insertStream, updateStream, skipStream)",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid,",
+						"          existing_source = source",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> existingAlls",
+						"skipStream@insertStream alterRow(insertIf(true())) ~> markForInsert",
+						"skipStream@updateStream alterRow(updateIf(true())) ~> markForUpdate",
+						"markForInsert, markForUpdate union(byName: true)~> combinedStream",
+						"combinedStream sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['rn','oid','source'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> upsertEmployees",
+						"markForUpdate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as string,",
+						"          status_date as string,",
+						"          is_foreigner as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> archiveToDataLake",
+						"skipStream@skipStream sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as string,",
+						"          status_date as string,",
+						"          is_foreigner as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> logSkippedMigrated"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_df_company')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dataset_Source",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dataset_Sink",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPANYID as string,",
+						"          NAME as string,",
+						"          ADDRESS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as timestamp,",
+						"          BUSINESSTYPEID as long,",
+						"          PARENTID as string,",
+						"          REPGROUPID as string,",
+						"          PHONE as string,",
+						"          FAX as string,",
+						"          INTCOMPANYID as long,",
+						"          JDECOMPANY as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source1 derive(company_code = COMPANYID,",
+						"          company_name = NAME,",
+						"          is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC()) ~> transform1",
+						"transform1 select(mapColumn(",
+						"          company_code,",
+						"          company_name,",
+						"          is_active,",
+						"          source_system_code,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 alterRow(upsertIf(!isNull(company_code))) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['company_code'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
