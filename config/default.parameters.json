@@ -1,0 +1,9 @@
+{
+    "factoryName": "my-adf",
+    "globalParameters": {
+      "Environment": {
+        "value": "PROD"
+      }
+    }
+  }
+  

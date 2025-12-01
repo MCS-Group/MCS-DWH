@@ -1,0 +1,25 @@
+{
+    "factoryName": "my-adf-prod",
+    "globalParameters": {
+      "Environment": {
+        "value": "PROD"
+      }
+    },
+    "linkedServices": {
+      "AzureSqlDW": {
+        "properties": {
+          "typeProperties": {
+            "connectionString": "Server=tcp:prod-sql.database.windows.net;Database=DW;User ID=prod;Password=***"
+          }
+        }
+      },
+      "AzureKeyVault": {
+        "properties": {
+          "typeProperties": {
+            "baseUrl": "https://prod-keyvault.vault.azure.net/"
+          }
+        }
+      }
+    }
+  }
+  

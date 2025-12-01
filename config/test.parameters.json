@@ -1,0 +1,25 @@
+{
+    "factoryName": "my-adf-test",
+    "globalParameters": {
+      "Environment": {
+        "value": "TEST"
+      }
+    },
+    "linkedServices": {
+      "AzureSqlDW": {
+        "properties": {
+          "typeProperties": {
+            "connectionString": "Server=tcp:test-sql.database.windows.net;Database=DW;User ID=test;Password=***"
+          }
+        }
+      },
+      "AzureKeyVault": {
+        "properties": {
+          "typeProperties": {
+            "baseUrl": "https://test-keyvault.vault.azure.net/"
+          }
+        }
+      }
+    }
+  }
+  

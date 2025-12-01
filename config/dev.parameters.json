@@ -1,0 +1,25 @@
+{
+    "factoryName": "my-adf-dev",
+    "globalParameters": {
+      "Environment": {
+        "value": "DEV"
+      }
+    },
+    "linkedServices": {
+      "AzureSqlDW": {
+        "properties": {
+          "typeProperties": {
+            "connectionString": "Server=tcp:dev-sql.database.windows.net;Database=DW;User ID=dev;Password=***"
+          }
+        }
+      },
+      "AzureKeyVault": {
+        "properties": {
+          "typeProperties": {
+            "baseUrl": "https://dev-keyvault.vault.azure.net/"
+          }
+        }
+      }
+    }
+  }
+  
