@@ -79,7 +79,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "evs_csv",
+						"referenceName": "Evs_csv",
 						"type": "DatasetReference"
 					}
 				]

@@ -1,5 +1,5 @@
 {
-	"name": "evs_csv",
+	"name": "Evs_csv",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "linkedService_err",
