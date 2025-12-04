@@ -277,7 +277,19 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "AG_Customer_DWH_to_DataService_SQL",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"agDwhCustomerTable": {
+								"cw_table": "ag_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"addressFromDataServiceTable": {
+								"cw_table": "location"
+							},
+							"saveToDataServiceDB": {
+								"cw_table": "customer_ag_info"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
@@ -308,7 +320,19 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "AG_TradeShop_DWH_to_DataService_SQL",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"agDwhTradeShopTable": {
+								"cw_table": "ag_dwh_trade_shop",
+								"cw_schema": "mch"
+							},
+							"addressFromDataServiceTable": {
+								"cw_table": "location"
+							},
+							"saveToDataServiceDB": {
+								"cw_table": "trade_shop_ag_info"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
