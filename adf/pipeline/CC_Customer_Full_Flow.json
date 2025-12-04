@@ -54,49 +54,6 @@
 				}
 			},
 			{
-				"name": "CC_Customer_Filtered_to_DWH",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "CC_Customer_Raw_to_Filtered",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "CC_Customer_Filtered_to_DWH",
-						"type": "DataFlowReference",
-						"datasetParameters": {
-							"ccCustomerFiltered": {
-								"csv_directory": "cc_dwh_filtered",
-								"csv_fileName": "cc_dwh_customer_full.csv"
-							},
-							"ccCustomerDWH": {
-								"cw_table": "cc_dwh_customer"
-							},
-							"ccTradeShopDWH": {
-								"cw_table": "cc_dwh_trade_shop"
-							}
-						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
-				}
-			},
-			{
 				"name": "Customer_DBToCSV",
 				"type": "Copy",
 				"dependsOn": [],
@@ -269,9 +226,9 @@
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "CC_Customer_Filtered_to_DWH",
+						"activity": "CC_Customer_Filtered_to_DWH_Sql",
 						"dependencyConditions": [
-							"Succeeded"
+							"Completed"
 						]
 					}
 				],
@@ -311,9 +268,9 @@
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "CC_Customer_Filtered_to_DWH",
+						"activity": "CC_Customer_Filtered_to_DWH_Sql",
 						"dependencyConditions": [
-							"Succeeded"
+							"Completed"
 						]
 					}
 				],
@@ -340,6 +297,37 @@
 								"cw_table": "trade_shop_cc_info"
 							}
 						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CC_Customer_Filtered_to_DWH_Sql",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "CC_Customer_Raw_to_Filtered",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "CC_Customer_Filtered_to_DWH_Sql",
+						"type": "DataFlowReference"
 					},
 					"compute": {
 						"coreCount": 8,
