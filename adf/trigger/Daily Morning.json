@@ -86,6 +86,19 @@
 					"dest_customer_file": "td_dwh_full_customer.csv",
 					"dest_gps_file": "td_dwh_full_trade_shop_gps.csv"
 				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "AG_Customer_Full_Flow_SQL",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"src_customer_table": "BigOneFullCustomers",
+					"src_tradeshop_gps_table": "TradeshopGPS_AG",
+					"dest_folder": "ag_dwh_sink",
+					"dest_customer_file": "ag_dwh_full_customer.csv",
+					"dest_gps_file": "ag_dwh_full_trade_shop_gps.csv"
+				}
 			}
 		],
 		"type": "ScheduleTrigger",
