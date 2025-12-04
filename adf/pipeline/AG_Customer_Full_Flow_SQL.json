@@ -232,7 +232,21 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "AG_Customer_Filtered_to_DWH_SQL",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"agCustomerFiltered": {
+								"csv_directory": "ag_dwh_filtered",
+								"csv_fileName": "ag_dwh_customer_full.csv"
+							},
+							"agCustomerDWH": {
+								"cw_table": "ag_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"agTradeShopDWH": {
+								"cw_table": "ag_dwh_trade_shop",
+								"cw_schema": "mch"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
