@@ -19,14 +19,14 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DWH_Mysql",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "ccCustomerDWH"
 				},
 				{
 					"dataset": {
-						"referenceName": "DWH_Mysql",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "ccTradeShopDWH"
@@ -166,7 +166,8 @@
 				"     format: 'table',",
 				"     batchSize: 5000,",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> ccCustomerDWH",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> ccCustomerDWH",
 				"AlterTradeShopTable sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
@@ -176,7 +177,8 @@
 				"     keys:['trade_shop_cc_id'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> ccTradeShopDWH"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> ccTradeShopDWH"
 			]
 		}
 	}
