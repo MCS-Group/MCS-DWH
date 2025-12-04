@@ -13,6 +13,762 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/TBLPOSITION_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLPOSITION",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable1_POSITION",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sourcesystemcode"
+						},
+						{
+							"name": "renamecols"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "join1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     cwfolder as string (\"TBLPOSITION\"),",
+						"     cwtablename as string (\"dim_position\")",
+						"}",
+						"source(output(",
+						"          POSITIONID as short,",
+						"          COMPANYID as string,",
+						"          DEPID as short,",
+						"          POSGROUPID as short,",
+						"          CODE as string,",
+						"          NAME as string,",
+						"          EMPLOYMENTTYPEID as short,",
+						"          GRADEID as short,",
+						"          VACANCYDAYS as short,",
+						"          LABOURCONDITION as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          JOBDESCID as short,",
+						"          JOBID as short,",
+						"          TYPE as string,",
+						"          POSITIONOCCID as short,",
+						"          POSLEVEL as short",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source(output(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"join1 derive(COMPANYID = iif(isNull(COMPANYID), 'MCK', COMPANYID),",
+						"          source_system_code = 0,",
+						"          ISACTIVE_INT = iif(ISACTIVE, 1, 0),",
+						"          company_key = company_key) ~> sourcesystemcode",
+						"sourcesystemcode derive(source_position_id = toString(POSITIONID),",
+						"          position_code = CODE,",
+						"          position_name = NAME,",
+						"          position_category = TYPE,",
+						"          position_level = toString(POSLEVEL),",
+						"          is_management = toInteger(iif(POSLEVEL <= 2, 1, 0)),",
+						"          is_active = toInteger(ISACTIVE_INT),",
+						"          effective_start_date = iif(isNull(CREATED), currentUTC(), toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          effective_end_date = iif(isNull(UPDATED), toTimestamp('9999-12-31T00:00:00Z'), toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          is_current_record = toInteger(1),",
+						"          dw_created_date = currentTimestamp(),",
+						"          dw_updated_date = currentTimestamp()) ~> renamecols",
+						"renamecols select(mapColumn(",
+						"          source_system_code,",
+						"          source_position_id,",
+						"          company_key,",
+						"          position_code,",
+						"          position_name,",
+						"          position_category,",
+						"          position_level,",
+						"          is_management,",
+						"          is_active,",
+						"          effective_start_date,",
+						"          effective_end_date,",
+						"          is_current_record,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"source1, source2 join(COMPANYID == company_code,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          position_key as integer,",
+						"          source_system_code as string,",
+						"          source_position_id as string,",
+						"          company_key as integer,",
+						"          position_code as string,",
+						"          position_name as string,",
+						"          position_category as string,",
+						"          position_level as string,",
+						"          is_management as integer,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TD_Customer_Raw_to_Filtered')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "TD"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdRawFullCustomerCSV"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdRawTradeShopGpsCSV"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Filtered_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "tdFilteredCSV"
+						}
+					],
+					"transformations": [
+						{
+							"name": "TradeShopIDLeftJoin"
+						},
+						{
+							"name": "ColumnFiltering",
+							"description": "Renaming and (removing) TradeShopIDLeftJoin to ColumnFiltering with columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CusID as integer,",
+						"          CusName as string,",
+						"          cusAddress as string,",
+						"          ISISChannelID as short,",
+						"          OwnerID as integer,",
+						"          OwnerName as string,",
+						"          INN as string,",
+						"          StoreTypeName as string,",
+						"          Region as string,",
+						"          SumNer as string,",
+						"          CreateDate as string,",
+						"          UpdateDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> tdRawFullCustomerCSV",
+						"source(output(",
+						"          TradeshopID as integer,",
+						"          CreatedDate as string,",
+						"          UpdatedDate as string,",
+						"          pickpackid as string,",
+						"          Longitude as string,",
+						"          Latitude as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> tdRawTradeShopGpsCSV",
+						"tdRawFullCustomerCSV, tdRawTradeShopGpsCSV join(CusID == TradeshopID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'off')~> TradeShopIDLeftJoin",
+						"TradeShopIDLeftJoin select(mapColumn(",
+						"          cusid_td = CusID,",
+						"          trade_shop_name = CusName,",
+						"          full_address = cusAddress,",
+						"          customer_td_id = OwnerID,",
+						"          customer_name = OwnerName,",
+						"          store_type = StoreTypeName,",
+						"          customer_register = INN,",
+						"          channel_id = ISISChannelID,",
+						"          district = Region,",
+						"          khoroo = SumNer,",
+						"          customer_created_date = CreateDate,",
+						"          longitude = Longitude,",
+						"          latitude = Latitude",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ColumnFiltering",
+						"ColumnFiltering sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['td_dwh_customer_full.csv'],",
+						"     umask: 0775,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> tdFilteredCSV"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_evs_allemployee')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "insertNewEmployees",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "extractNumberFromGname"
+						},
+						{
+							"name": "joinWithAllExisting"
+						},
+						{
+							"name": "filterOnlyNewEmployees"
+						},
+						{
+							"name": "selectAllSourcesKeys"
+						},
+						{
+							"name": "markForInsert"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid FROM employee_profile_temp',",
+						"     format: 'query') ~> existingAllSources",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1,",
+						"            iif(status == 'Ажлаас Гарсан', 2,",
+						"                iif(status == 'Шилжсэн', 2,",
+						"                    iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid))) ~> transformStatusAndSource",
+						"extractNumberFromGname aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"transformStatusAndSource derive(gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> extractNumberFromGname",
+						"removeDuplicatesInSource, selectAllSourcesKeys join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithAllExisting",
+						"joinWithAllExisting filter(isNull(existing_rn)) ~> filterOnlyNewEmployees",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectAllSourcesKeys",
+						"filterOnlyNewEmployees alterRow(insertIf(true())) ~> markForInsert",
+						"markForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     preSQLs:['DELETE FROM employee_profile_temp WHERE source = 0 OR source = \\'0\\''],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> insertNewEmployees",
+						"joinWithAllExisting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['employee_monthly_load.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> archiveToDataLake"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_evs_allemployee_upsert')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "upsertEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "logSkippedMigrated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "joinWithSource"
+						},
+						{
+							"name": "skipStream"
+						},
+						{
+							"name": "existingAlls"
+						},
+						{
+							"name": "markForInsert"
+						},
+						{
+							"name": "markForUpdate"
+						},
+						{
+							"name": "combinedStream"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string,",
+						"          source as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid, source FROM employee_profile',",
+						"     format: 'query') ~> existingAllSources",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1, iif(status == 'Ажлаас Гарсан', 2, iif(status == 'Шилжсэн', 2, iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid)),",
+						"          gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> transformStatusAndSource",
+						"transformStatusAndSource aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"removeDuplicatesInSource, existingAlls join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithSource",
+						"joinWithSource split(isNull(existing_rn),",
+						"     !isNull(existing_rn) && existing_source == 0,",
+						"     disjoint: false) ~> skipStream@(insertStream, updateStream, skipStream)",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid,",
+						"          existing_source = source",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> existingAlls",
+						"skipStream@insertStream alterRow(insertIf(true())) ~> markForInsert",
+						"skipStream@updateStream alterRow(updateIf(true())) ~> markForUpdate",
+						"markForInsert, markForUpdate union(byName: true)~> combinedStream",
+						"combinedStream sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['rn','oid','source'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> upsertEmployees",
+						"markForUpdate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as string,",
+						"          status_date as string,",
+						"          is_foreigner as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> archiveToDataLake",
+						"skipStream@skipStream sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as string,",
+						"          status_date as string,",
+						"          is_foreigner as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> logSkippedMigrated"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dwh_df_company')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dataset_Source",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dataset_Sink",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPANYID as string,",
+						"          NAME as string,",
+						"          ADDRESS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as timestamp,",
+						"          BUSINESSTYPEID as long,",
+						"          PARENTID as string,",
+						"          REPGROUPID as string,",
+						"          PHONE as string,",
+						"          FAX as string,",
+						"          INTCOMPANYID as long,",
+						"          JDECOMPANY as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source1 derive(company_code = COMPANYID,",
+						"          company_name = NAME,",
+						"          is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC()) ~> transform1",
+						"transform1 select(mapColumn(",
+						"          company_code,",
+						"          company_name,",
+						"          is_active,",
+						"          source_system_code,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 alterRow(upsertIf(!isNull(company_code))) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['company_code'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dwh_df_department')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1915,832 +2671,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_TBLPOSITION')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_TBLPOSITION",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_TBLPOSITION",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"TBLPOSITION\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "TBLPOSITION.csv"
-									},
-									"sink1": {
-										"cwfolder": "TBLPOSITION"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:11Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AG_Customer_Full_Flow')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "AG_Customer_Raw_to_Filtered",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "TradeshopGPS_DBToCSV",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "Customer_DBToCSV",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_Customer_Raw_to_Filtered",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"agRawFullCustomerCSV": {
-										"csv_fileName": "ag_dwh_full_customer.csv",
-										"csv_directory": "ag_dwh_sink"
-									},
-									"agRawTradeShopGpsCSV": {
-										"csv_fileName": "ag_dwh_full_trade_shop_gps.csv",
-										"csv_directory": "ag_dwh_sink"
-									},
-									"agFilteredCSV": {
-										"csv_directory": "ag_dwh_filtered",
-										"csv_fileName": "ag_dwh_customer_full.csv"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "None",
-							"cacheSinks": {
-								"firstRowOnly": true
-							}
-						}
-					},
-					{
-						"name": "AG_Customer_Filtered_to_DWH",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "AG_Customer_Raw_to_Filtered",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_Customer_Filtered_to_DWH",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"agCustomerFiltered": {
-										"csv_directory": "ag_dwh_filtered",
-										"csv_fileName": "ag_dwh_customer_full.csv"
-									},
-									"agCustomerDWH": {
-										"cw_table": "ag_dwh_customer"
-									},
-									"agTradeShopDWH": {
-										"cw_table": "ag_dwh_trade_shop"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "None",
-							"cacheSinks": {
-								"firstRowOnly": true
-							}
-						}
-					},
-					{
-						"name": "Customer_DBToCSV",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": {
-									"value": "select\n    CusID,\n    REPLACE(REPLACE(CusName, CHAR(10), ''), CHAR(13), '') AS CusName,\n    REPLACE(REPLACE(REPLACE(cusAddress, CHAR(10), ''), CHAR(13), ''), '\"', '') AS cusAddress,\n    ISISChannelID,\n    OwnerID,\n    REPLACE(REPLACE(OwnerName, CHAR(10), ''), CHAR(13), '') AS OwnerName,\n    REPLACE(REPLACE(INN, CHAR(10), ''), CHAR(13), '') AS INN,\n    TradeShopID,\n    REPLACE(REPLACE(StoreTypeName, CHAR(10), ''), CHAR(13), '') AS StoreTypeName,\n    Phone,\n    CreateDate,\n    UpdateDate\nfrom [dbo].[@{pipeline().parameters.src_customer_table}]",
-									"type": "Expression"
-								},
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": true,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_QVReports",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": {
-										"value": "@pipeline().parameters.src_customer_table",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": {
-										"value": "@pipeline().parameters.dest_customer_file",
-										"type": "Expression"
-									},
-									"csv_directory": {
-										"value": "@pipeline().parameters.dest_folder",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "TradeshopGPS_DBToCSV",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": true,
-							"logSettings": {
-								"enableCopyActivityLog": true,
-								"copyActivityLogSettings": {
-									"logLevel": "Warning",
-									"enableReliableLogging": true
-								},
-								"logLocationSettings": {
-									"linkedServiceName": {
-										"referenceName": "ADLS_FMCS_RAW",
-										"type": "LinkedServiceReference"
-									},
-									"path": "fmcg-raw/logs"
-								}
-							},
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_QVReports",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": {
-										"value": "@pipeline().parameters.src_tradeshop_gps_table",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": {
-										"value": "@pipeline().parameters.dest_gps_file",
-										"type": "Expression"
-									},
-									"csv_directory": {
-										"value": "@pipeline().parameters.dest_folder",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "AG_Customer_DWH_to_DataService",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "AG_Customer_Filtered_to_DWH",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_Customer_DWH_to_DataService",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"agDwhCustomerTable": {
-										"cw_table": "ag_dwh_customer"
-									},
-									"addressFromDataServiceTable": {
-										"cw_table": "location"
-									},
-									"saveToDataServiceDB": {
-										"cw_table": "customer_ag_info"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "AG_TradeShop_DWH_to_DataService",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "AG_Customer_Filtered_to_DWH",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_TradeShop_DWH_to_DataService",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"agDwhTradeShopTable": {
-										"cw_table": "ag_dwh_trade_shop"
-									},
-									"addressFromDataServiceTable": {
-										"cw_table": "location"
-									},
-									"saveToDataServiceDB": {
-										"cw_table": "trade_shop_ag_info"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"src_customer_table": {
-						"type": "string",
-						"defaultValue": "BigOneFullCustomers"
-					},
-					"src_tradeshop_gps_table": {
-						"type": "string",
-						"defaultValue": "TradeshopGPS_AG"
-					},
-					"dest_folder": {
-						"type": "string",
-						"defaultValue": "ag_dwh_sink"
-					},
-					"dest_customer_file": {
-						"type": "string",
-						"defaultValue": "ag_dwh_full_customer.csv"
-					},
-					"dest_gps_file": {
-						"type": "string",
-						"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
-					}
-				},
-				"folder": {
-					"name": "AG Pipelines/Customer"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-11T04:37:21Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AG_IdMaster_Update')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "AG_IdMaster_Update_CustomerId",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_IdMaster_Update_CustomerId",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"tradeshopAgInfoTable": {
-										"cw_table": "trade_shop_ag_info"
-									},
-									"updateAgCustomerInIdMaster": {
-										"cw_table": "id_master"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "AG Pipelines/Customer"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-07-18T03:33:42Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AG_MainDB_to_Raw')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy RouteDays src to raw",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_MainDB",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "AG_RouteDays"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": "ag_dwh_route_days.csv",
-									"csv_directory": {
-										"value": "@pipeline().parameters.main_directory",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Copy SalesReps src to raw",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Copy RouteDays src to raw",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_MainDB",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "AG_Salereps"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": "ag_dwh_sales_reps.csv",
-									"csv_directory": {
-										"value": "@pipeline().parameters.main_directory",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"main_directory": {
-						"type": "string",
-						"defaultValue": "ag_dwh_sink"
-					}
-				},
-				"folder": {
-					"name": "AG Pipelines"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-11T04:37:21Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AG_Order_1d_Ago_Extract_CSV')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Order_DB_to_Raw",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [
-							{
-								"name": "Source",
-								"value": "dbo.BigOneFull"
-							},
-							{
-								"name": "Destination",
-								"value": "fmcg-raw/ag_dwh_sink/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}/order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv"
-							}
-						],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": {
-									"value": "select * from [dbo].[BigOneFull] \nwhere [DDate] >= '@{formatDateTime(pipeline().parameters.windowStart, 'yyyy-MM-dd' )}' \nAND [DDate] < '@{formatDateTime(pipeline().parameters.windowEnd, 'yyyy-MM-dd' )}'",
-									"type": "Expression"
-								},
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_AG_Order",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_By_Date_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
-									"cw_folderPath": {
-										"value": "ag_dwh_sink/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Raw_to_Filtered",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Order_DB_to_Raw",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ADLS_Raw_By_Date_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
-									"cw_folderPath": {
-										"value": "ag_dwh_sink/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Filtered_By_Date_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
-									"cw_folderPath": {
-										"value": "ag_dwh_filtered/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"windowStart": {
-						"type": "String"
-					},
-					"windowEnd": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "AG Pipelines/Order"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-01-14T11:07:31Z"
 			},
 			"dependsOn": []
 		}

@@ -67,6 +67,14 @@
 			"type": "string",
 			"defaultValue": "mcsholdingdw"
 		},
+		"AzureSqlDw_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDw_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mcsholdingdw"
+		},
 		"Azure_DWH_Dynamic_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "mcsholdingdwh.mysql.database.azure.com"
@@ -215,6 +223,23 @@
 					"server": "[parameters('AzureSqlDatabase1_properties_typeProperties_server')]",
 					"database": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]",
 					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SystemAssignedManagedIdentity"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDw')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDw_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDw_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
 					"trustServerCertificate": false,
 					"authenticationType": "SystemAssignedManagedIdentity"
 				}
@@ -438,13 +463,6 @@
 					"selfContainedInteractiveAuthoringEnabled": false
 				}
 			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/default')]",
-			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
-			"apiVersion": "2018-06-01",
-			"properties": {},
 			"dependsOn": []
 		}
 	]

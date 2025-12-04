@@ -79,6 +79,14 @@
 			"type": "string",
 			"defaultValue": "mcsholdingdw"
 		},
+		"AzureSqlDw_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDw_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mcsholdingdw"
+		},
 		"Azure_DWH_Dynamic_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "mcsholdingdwh.mysql.database.azure.com"
@@ -295,6 +303,12 @@
 					"AzureSqlDatabase1_properties_typeProperties_database": {
 						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]"
 					},
+					"AzureSqlDw_properties_typeProperties_server": {
+						"value": "[parameters('AzureSqlDw_properties_typeProperties_server')]"
+					},
+					"AzureSqlDw_properties_typeProperties_database": {
+						"value": "[parameters('AzureSqlDw_properties_typeProperties_database')]"
+					},
 					"Azure_DWH_Dynamic_properties_typeProperties_server": {
 						"value": "[parameters('Azure_DWH_Dynamic_properties_typeProperties_server')]"
 					},
@@ -498,6 +512,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_6')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_8",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_8.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
 						"value": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart')]"
@@ -549,26 +583,6 @@
 					},
 					"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd": {
 						"value": "[parameters('Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd')]"
-					}
-				}
-			},
-			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_6')]"
-			]
-		},
-		{
-			"name": "mcsh-data-factory_ArmTemplate_8",
-			"type": "Microsoft.Resources/deployments",
-			"apiVersion": "2024-03-01",
-			"properties": {
-				"mode": "incremental",
-				"templateLink": {
-					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_8.json', parameters('containerSasToken'))]",
-					"contentVersion": "1.0.0.0"
-				},
-				"parameters": {
-					"factoryName": {
-						"value": "[parameters('factoryName')]"
 					}
 				}
 			},

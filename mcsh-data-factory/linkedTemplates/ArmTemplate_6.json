@@ -13,6 +13,1341 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_TBLPOSITION')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ADLS_Staging_TBLPOSITION",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ADLS_Staging_TBLPOSITION",
+								"type": "DataFlowReference",
+								"parameters": {
+									"cwfilename": "\"TBLPOSITION\""
+								},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "GreenErp",
+										"cwfilename": "TBLPOSITION.csv"
+									},
+									"sink1": {
+										"cwfolder": "TBLPOSITION"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:11Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_Customer_Full_Flow')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "AG_Customer_Raw_to_Filtered",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "TradeshopGPS_DBToCSV",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "Customer_DBToCSV",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_Raw_to_Filtered",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agRawFullCustomerCSV": {
+										"csv_fileName": "ag_dwh_full_customer.csv",
+										"csv_directory": "ag_dwh_sink"
+									},
+									"agRawTradeShopGpsCSV": {
+										"csv_fileName": "ag_dwh_full_trade_shop_gps.csv",
+										"csv_directory": "ag_dwh_sink"
+									},
+									"agFilteredCSV": {
+										"csv_directory": "ag_dwh_filtered",
+										"csv_fileName": "ag_dwh_customer_full.csv"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
+						}
+					},
+					{
+						"name": "AG_Customer_Filtered_to_DWH",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Raw_to_Filtered",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_Filtered_to_DWH",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agCustomerFiltered": {
+										"csv_directory": "ag_dwh_filtered",
+										"csv_fileName": "ag_dwh_customer_full.csv"
+									},
+									"agCustomerDWH": {
+										"cw_table": "ag_dwh_customer"
+									},
+									"agTradeShopDWH": {
+										"cw_table": "ag_dwh_trade_shop"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
+						}
+					},
+					{
+						"name": "Customer_DBToCSV",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "select\n    CusID,\n    REPLACE(REPLACE(CusName, CHAR(10), ''), CHAR(13), '') AS CusName,\n    REPLACE(REPLACE(REPLACE(cusAddress, CHAR(10), ''), CHAR(13), ''), '\"', '') AS cusAddress,\n    ISISChannelID,\n    OwnerID,\n    REPLACE(REPLACE(OwnerName, CHAR(10), ''), CHAR(13), '') AS OwnerName,\n    REPLACE(REPLACE(INN, CHAR(10), ''), CHAR(13), '') AS INN,\n    TradeShopID,\n    REPLACE(REPLACE(StoreTypeName, CHAR(10), ''), CHAR(13), '') AS StoreTypeName,\n    Phone,\n    CreateDate,\n    UpdateDate\nfrom [dbo].[@{pipeline().parameters.src_customer_table}]",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_QVReports",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": {
+										"value": "@pipeline().parameters.src_customer_table",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": {
+										"value": "@pipeline().parameters.dest_customer_file",
+										"type": "Expression"
+									},
+									"csv_directory": {
+										"value": "@pipeline().parameters.dest_folder",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "TradeshopGPS_DBToCSV",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "ADLS_FMCS_RAW",
+										"type": "LinkedServiceReference"
+									},
+									"path": "fmcg-raw/logs"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_QVReports",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": {
+										"value": "@pipeline().parameters.src_tradeshop_gps_table",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": {
+										"value": "@pipeline().parameters.dest_gps_file",
+										"type": "Expression"
+									},
+									"csv_directory": {
+										"value": "@pipeline().parameters.dest_folder",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "AG_Customer_DWH_to_DataService",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Filtered_to_DWH",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_DWH_to_DataService",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhCustomerTable": {
+										"cw_table": "ag_dwh_customer"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "customer_ag_info"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "AG_TradeShop_DWH_to_DataService",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Filtered_to_DWH",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_TradeShop_DWH_to_DataService",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhTradeShopTable": {
+										"cw_table": "ag_dwh_trade_shop"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "trade_shop_ag_info"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"src_customer_table": {
+						"type": "string",
+						"defaultValue": "BigOneFullCustomers"
+					},
+					"src_tradeshop_gps_table": {
+						"type": "string",
+						"defaultValue": "TradeshopGPS_AG"
+					},
+					"dest_folder": {
+						"type": "string",
+						"defaultValue": "ag_dwh_sink"
+					},
+					"dest_customer_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_customer.csv"
+					},
+					"dest_gps_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+					}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-11T04:37:21Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_Customer_Full_Flow_SQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "AG_Customer_Raw_to_Filtered",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "TradeshopGPS_DBToCSV",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "Customer_DBToCSV",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_Raw_to_Filtered",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agRawFullCustomerCSV": {
+										"csv_fileName": "ag_dwh_full_customer.csv",
+										"csv_directory": "ag_dwh_sink"
+									},
+									"agRawTradeShopGpsCSV": {
+										"csv_fileName": "ag_dwh_full_trade_shop_gps.csv",
+										"csv_directory": "ag_dwh_sink"
+									},
+									"agFilteredCSV": {
+										"csv_directory": "ag_dwh_filtered",
+										"csv_fileName": "ag_dwh_customer_full.csv"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
+						}
+					},
+					{
+						"name": "Customer_DBToCSV",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "select\n    CusID,\n    REPLACE(REPLACE(CusName, CHAR(10), ''), CHAR(13), '') AS CusName,\n    REPLACE(REPLACE(REPLACE(cusAddress, CHAR(10), ''), CHAR(13), ''), '\"', '') AS cusAddress,\n    ISISChannelID,\n    OwnerID,\n    REPLACE(REPLACE(OwnerName, CHAR(10), ''), CHAR(13), '') AS OwnerName,\n    REPLACE(REPLACE(INN, CHAR(10), ''), CHAR(13), '') AS INN,\n    TradeShopID,\n    REPLACE(REPLACE(StoreTypeName, CHAR(10), ''), CHAR(13), '') AS StoreTypeName,\n    Phone,\n    CreateDate,\n    UpdateDate\nfrom [dbo].[@{pipeline().parameters.src_customer_table}]",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_QVReports",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": {
+										"value": "@pipeline().parameters.src_customer_table",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": {
+										"value": "@pipeline().parameters.dest_customer_file",
+										"type": "Expression"
+									},
+									"csv_directory": {
+										"value": "@pipeline().parameters.dest_folder",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "TradeshopGPS_DBToCSV",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "ADLS_FMCS_RAW",
+										"type": "LinkedServiceReference"
+									},
+									"path": "fmcg-raw/logs"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_QVReports",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": {
+										"value": "@pipeline().parameters.src_tradeshop_gps_table",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": {
+										"value": "@pipeline().parameters.dest_gps_file",
+										"type": "Expression"
+									},
+									"csv_directory": {
+										"value": "@pipeline().parameters.dest_folder",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "AG_Customer_Filtered_to_DWH_SQL",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Raw_to_Filtered",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_Filtered_to_DWH_SQL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agCustomerFiltered": {
+										"csv_directory": "ag_dwh_filtered",
+										"csv_fileName": "ag_dwh_customer_full.csv"
+									},
+									"agCustomerDWH": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"agTradeShopDWH": {
+										"cw_table": "ag_dwh_trade_shop",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "AG_Customer_DWH_to_DataService_SQL",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Filtered_to_DWH_SQL",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_Customer_DWH_to_DataService_SQL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhCustomerTable": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "customer_ag_info"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "AG_TradeShop_DWH_to_DataService_SQL",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "AG_Customer_Filtered_to_DWH_SQL",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_TradeShop_DWH_to_DataService_SQL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhTradeShopTable": {
+										"cw_table": "ag_dwh_trade_shop",
+										"cw_schema": "mch"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "trade_shop_ag_info"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"src_customer_table": {
+						"type": "string",
+						"defaultValue": "BigOneFullCustomers"
+					},
+					"src_tradeshop_gps_table": {
+						"type": "string",
+						"defaultValue": "TradeshopGPS_AG"
+					},
+					"dest_folder": {
+						"type": "string",
+						"defaultValue": "ag_dwh_sink"
+					},
+					"dest_customer_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_customer.csv"
+					},
+					"dest_gps_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+					}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-11T04:37:21Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_Customer_test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TradeshopGPS_DBToCSV",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "ADLS_FMCS_RAW",
+										"type": "LinkedServiceReference"
+									},
+									"path": "fmcg-raw/logs"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_QVReports",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": {
+										"value": "@pipeline().parameters.src_tradeshop_gps_table",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": {
+										"value": "@pipeline().parameters.dest_gps_file",
+										"type": "Expression"
+									},
+									"csv_directory": {
+										"value": "@pipeline().parameters.dest_folder",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"src_customer_table": {
+						"type": "string",
+						"defaultValue": "BigOneFullCustomers"
+					},
+					"src_tradeshop_gps_table": {
+						"type": "string",
+						"defaultValue": "TradeshopGPS_AG"
+					},
+					"dest_folder": {
+						"type": "string",
+						"defaultValue": "ag_dwh_sink"
+					},
+					"dest_customer_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_customer.csv"
+					},
+					"dest_gps_file": {
+						"type": "string",
+						"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+					}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-11T04:37:21Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_IdMaster_Update')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "AG_IdMaster_Update_CustomerId",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_IdMaster_Update_CustomerId",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"tradeshopAgInfoTable": {
+										"cw_table": "trade_shop_ag_info"
+									},
+									"updateAgCustomerInIdMaster": {
+										"cw_table": "id_master"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-07-18T03:33:42Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_MainDB_to_Raw')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy RouteDays src to raw",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_MainDB",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": "AG_RouteDays"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": "ag_dwh_route_days.csv",
+									"csv_directory": {
+										"value": "@pipeline().parameters.main_directory",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Copy SalesReps src to raw",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy RouteDays src to raw",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_MainDB",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": "AG_Salereps"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"csv_fileName": "ag_dwh_sales_reps.csv",
+									"csv_directory": {
+										"value": "@pipeline().parameters.main_directory",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"main_directory": {
+						"type": "string",
+						"defaultValue": "ag_dwh_sink"
+					}
+				},
+				"folder": {
+					"name": "AG Pipelines"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-11T04:37:21Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AG_Order_1d_Ago_Extract_CSV')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Order_DB_to_Raw",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "dbo.BigOneFull"
+							},
+							{
+								"name": "Destination",
+								"value": "fmcg-raw/ag_dwh_sink/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}/order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "select * from [dbo].[BigOneFull] \nwhere [DDate] >= '@{formatDateTime(pipeline().parameters.windowStart, 'yyyy-MM-dd' )}' \nAND [DDate] < '@{formatDateTime(pipeline().parameters.windowEnd, 'yyyy-MM-dd' )}'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "FMCG_SQLServer_AG_Order",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_By_Date_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
+									"cw_folderPath": {
+										"value": "ag_dwh_sink/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Raw_to_Filtered",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Order_DB_to_Raw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ADLS_Raw_By_Date_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
+									"cw_folderPath": {
+										"value": "ag_dwh_sink/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Filtered_By_Date_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "order_@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}_@{formatDateTime(pipeline().parameters.windowStart,'dd')}.csv",
+									"cw_folderPath": {
+										"value": "ag_dwh_filtered/ag_dwh_order/@{formatDateTime(pipeline().parameters.windowStart,'yyyy')}_@{formatDateTime(pipeline().parameters.windowStart,'MM')}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "AG Pipelines/Order"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-01-14T11:07:31Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AG_Small_Tables_Full_Extract')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -4349,780 +5684,6 @@
 				},
 				"folder": {
 					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/GreenERP_TBLEMPEMPLHIST')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy_qd9",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "OracleSource",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings",
-									"copyBehavior": "FlattenHierarchy"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "HR_GreenERP_DS",
-								"type": "DatasetReference",
-								"parameters": {
-									"tableName": "TBLEMPEMPLHIST"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_GreenErp_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_fileName": "TBLEMPEMPLHIST.csv",
-									"cw_folderPath": "@pipeline().parameters.main_directory"
-								}
-							}
-						]
-					},
-					{
-						"name": "ADLS_Staging_copy1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Copy_qd9",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_copy1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "TBLEMPEMPLHIST.csv"
-									},
-									"sink1": {
-										"cwfolder": "TBLEMPEMPLHIST"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"windowStart": {
-						"type": "String"
-					},
-					"windowEnd": {
-						"type": "String"
-					},
-					"main_directory": {
-						"type": "String",
-						"defaultValue": "GreenErp"
-					}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/GreenERP_TBLPOSITION')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy_qd9",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "OracleSource",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings",
-									"copyBehavior": "FlattenHierarchy"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "HR_GreenERP_DS",
-								"type": "DatasetReference",
-								"parameters": {
-									"tableName": "TBLPOSITION"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_GreenErp_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_fileName": "TBLPOSITION.csv",
-									"cw_folderPath": "@pipeline().parameters.main_directory"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"windowStart": {
-						"type": "String"
-					},
-					"windowEnd": {
-						"type": "String"
-					},
-					"main_directory": {
-						"type": "String",
-						"defaultValue": "GreenErp"
-					}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TD_Customer_Full_Flow')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Customer_DBToCSV",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": {
-									"value": "select\n    CusID,\n    REPLACE(REPLACE(CusName, CHAR(10), ''), CHAR(13), '') AS CusName,\n    REPLACE(REPLACE(REPLACE(cusAddress, CHAR(10), ''), CHAR(13), ''), '\"', '') AS cusAddress,\n    ISISChannelID,\n    OwnerID,\n    REPLACE(REPLACE(OwnerName, CHAR(10), ''), CHAR(13), '') AS OwnerName,\n    REPLACE(REPLACE(INN, CHAR(10), ''), CHAR(13), '') AS INN,\n    REPLACE(REPLACE(CusType, CHAR(10), ''), CHAR(13), '') AS StoreTypeName,\n    REPLACE(REPLACE(Region, CHAR(10), ''), CHAR(13), '') AS  Region,\n    REPLACE(REPLACE(SumNer, CHAR(10), ''), CHAR(13), '') AS SumNer,\n    CreateDate,\n    UpdateDate\nfrom BigOneFullCustomers_D",
-									"type": "Expression"
-								},
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": true,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_QVReports",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": {
-										"value": "@pipeline().parameters.src_customer_table",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": {
-										"value": "@pipeline().parameters.dest_customer_file",
-										"type": "Expression"
-									},
-									"csv_directory": {
-										"value": "@pipeline().parameters.dest_folder",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "TradeshopGPS_DBToCSV",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Customer_DBToCSV",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": true,
-							"logSettings": {
-								"enableCopyActivityLog": true,
-								"copyActivityLogSettings": {
-									"logLevel": "Warning",
-									"enableReliableLogging": true
-								},
-								"logLocationSettings": {
-									"linkedServiceName": {
-										"referenceName": "ADLS_FMCS_RAW",
-										"type": "LinkedServiceReference"
-									},
-									"path": "fmcg-raw/logs"
-								}
-							},
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_QVReports",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": {
-										"value": "@pipeline().parameters.src_tradeshop_gps_table",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": {
-										"value": "@pipeline().parameters.dest_gps_file",
-										"type": "Expression"
-									},
-									"csv_directory": {
-										"value": "@pipeline().parameters.dest_folder",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"src_customer_table": {
-						"type": "string",
-						"defaultValue": "BigOneFullCustomers_D"
-					},
-					"src_tradeshop_gps_table": {
-						"type": "string",
-						"defaultValue": "TradeshopGPS_TD"
-					},
-					"dest_folder": {
-						"type": "string",
-						"defaultValue": "td_dwh_sink"
-					},
-					"dest_customer_file": {
-						"type": "string",
-						"defaultValue": "td_dwh_full_customer.csv"
-					},
-					"dest_gps_file": {
-						"type": "string",
-						"defaultValue": "td_dwh_full_trade_shop_gps.csv"
-					}
-				},
-				"folder": {
-					"name": "TD Pipelines/Customer"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-11T04:37:21Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TD_MainDB_to_Raw')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy RouteDays src to raw",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_MainDB",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "TD_RouteDays"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": "td_dwh_route_days.csv",
-									"csv_directory": {
-										"value": "@pipeline().parameters.main_directory",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Copy SalesReps src to raw",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Copy RouteDays src to raw",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_MainDB",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "TD_Salereps"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": "td_dwh_sales_reps.csv",
-									"csv_directory": {
-										"value": "@pipeline().parameters.main_directory",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"main_directory": {
-						"type": "string",
-						"defaultValue": "td_dwh_sink"
-					}
-				},
-				"folder": {
-					"name": "TD Pipelines"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-11T04:37:21Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TD_Small_Tables_Full_Extract')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy Products src to raw",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FMCG_SQLServer_QVReports",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "BigOneFullProducts_D"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ADLS_Raw_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"csv_fileName": "td_dwh_full_product.csv",
-									"csv_directory": {
-										"value": "@pipeline().parameters.main_directory",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"main_directory": {
-						"type": "string",
-						"defaultValue": "td_dwh_sink"
-					}
-				},
-				"folder": {
-					"name": "TD Pipelines"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-11T04:37:21Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_pl_company')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "dataflow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dwh_df_company",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {
-										"tableName": "TBLCOMPANY",
-										"schema": "HRMS_PROD"
-									},
-									"sink1": {
-										"tableName": "dim_company",
-										"schema": "dwh_hr"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_pl_department')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "dwh_df_department",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dwh_df_department",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {
-										"tableName": "TBLDEPARTMENT",
-										"schema": "HRMS_PROD"
-									},
-									"source2": {
-										"tableName": "dim_company",
-										"schema": "dwh_hr"
-									},
-									"sink1": {
-										"tableName": "dim_department",
-										"schema": "dwh_hr"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW"
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-11-27T09:26:10Z"

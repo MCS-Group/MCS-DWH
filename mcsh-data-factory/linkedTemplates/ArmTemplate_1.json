@@ -13,6 +13,13 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ADLS_Filtered_By_Date_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1469,88 +1476,6 @@
 					{
 						"name": "is_current_record",
 						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "dw_created_date",
-						"type": "datetime",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "dw_updated_date",
-						"type": "datetime",
-						"precision": 0,
-						"scale": 0
-					}
-				],
-				"typeProperties": {
-					"tableName": {
-						"value": "@dataset().cwtablename",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AzureMySqlTable_COMPANY')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Azure_DWH_HR_link",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"cwtablename": {
-						"type": "String",
-						"defaultValue": "dim_company"
-					}
-				},
-				"annotations": [],
-				"type": "AzureMySqlTable",
-				"schema": [
-					{
-						"name": "company_key",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "company_code",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "company_name",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "is_active",
-						"type": "bit",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "source_system_code",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "source_created_date",
-						"type": "datetime",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "source_updated_date",
-						"type": "datetime",
 						"precision": 0,
 						"scale": 0
 					},

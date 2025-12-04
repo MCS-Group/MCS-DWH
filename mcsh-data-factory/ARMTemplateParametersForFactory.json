@@ -59,6 +59,12 @@
 		"AzureSqlDatabase1_properties_typeProperties_database": {
 			"value": "mcsholdingdw"
 		},
+		"AzureSqlDw_properties_typeProperties_server": {
+			"value": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDw_properties_typeProperties_database": {
+			"value": "mcsholdingdw"
+		},
 		"Azure_DWH_Dynamic_properties_typeProperties_server": {
 			"value": "mcsholdingdwh.mysql.database.azure.com"
 		},
