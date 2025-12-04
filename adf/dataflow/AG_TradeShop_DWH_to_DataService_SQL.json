@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "DWH_Mysql",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "agDwhTradeShopTable"
@@ -74,26 +74,7 @@
 				}
 			],
 			"scriptLines": [
-				"source(output(",
-				"          id as integer,",
-				"          trade_shop_ag_id as integer,",
-				"          is_reliable_trade_shop_ag_id as integer,",
-				"          trade_shop_name as string,",
-				"          customer_ag_id as integer,",
-				"          full_address as string,",
-				"          longitude as double,",
-				"          latitude as double,",
-				"          phone_number as string,",
-				"          isis_channel_id as integer,",
-				"          trade_shop_id_check as string,",
-				"          is_reliable_trade_shop_id_check as integer,",
-				"          store_type_name as string,",
-				"          trade_shop_created_date as timestamp,",
-				"          created_at as timestamp,",
-				"          updated_at as timestamp,",
-				"          customer_register as string",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> agDwhTradeShopTable",
