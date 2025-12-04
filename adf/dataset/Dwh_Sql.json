@@ -8,10 +8,23 @@
 		"parameters": {
 			"cw_table": {
 				"type": "string"
+			},
+			"cw_schema": {
+				"type": "String"
 			}
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
-		"schema": []
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().cw_schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().cw_table",
+				"type": "Expression"
+			}
+		}
 	}
 }
