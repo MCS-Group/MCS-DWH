@@ -1,0 +1,14 @@
+{
+	"name": "AzureSqlDw",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "datawerehouseserver.database.windows.net",
+			"database": "mcsholdingdw",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SystemAssignedManagedIdentity"
+		}
+	}
+}
