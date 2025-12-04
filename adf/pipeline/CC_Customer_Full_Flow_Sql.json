@@ -327,7 +327,21 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "CC_Customer_Filtered_to_DWH_Sql",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"ccCustomerFiltered": {
+								"csv_directory": "cc_dwh_filtered",
+								"csv_fileName": "cc_dwh_customer_full.csv"
+							},
+							"ccCustomerDWH": {
+								"cw_table": "cc_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"ccTradeShopDWH": {
+								"cw_table": "cc_dwh_trade_shop",
+								"cw_schema": "mch"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
