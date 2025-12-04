@@ -1400,6 +1400,194 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/CC_Customer_Filtered_to_DWH_Sql')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Filtered_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "ccCustomerFiltered",
+							"description": "ADLS deerh fmcg-filtered container-ees cc_dwh_filtered/cc_dwh_customer_full.csv datag avah process. Ene ni customer datag aguulsan bga"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "ccCustomerDWH"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "ccTradeShopDWH"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CustomerTable",
+							"description": "customer_register (INN), customer_cc_id(OwnerID)-aar groupleed uldsen medeelluudiig aggregate hiigeed customer table gargaj avna."
+						},
+						{
+							"name": "AlterCustomerTable",
+							"description": "Database ruu upsert hiih bolomjiig bii bolgoh"
+						},
+						{
+							"name": "notNullCustomers",
+							"description": "0 (null) registertei bas null owner_id-tai hariltsagchdiig ylgaj avah"
+						},
+						{
+							"name": "CustomerInfoFix",
+							"description": "Customer register ni null, esvel formataas zursun uyd tuuniig '0' bolgoh, format ni 7 orontoi too esvel hunii RD bh ystoi"
+						},
+						{
+							"name": "TradeShopTable",
+							"description": "niit medeellees tradeshop-iin medeelel gargan avch DWH ruu hadgalah"
+						},
+						{
+							"name": "FilterOutUnknownTradeshops"
+						},
+						{
+							"name": "TradeshopFix",
+							"description": "trade_shop_cc_id (cusid)-n utga null bgaa tohioldold nuguuguur ni nuhuh, esvel 0-eer nuhnu"
+						},
+						{
+							"name": "GroupByTradeshop",
+							"description": "Tradeshop datagaa trade_shop_cc_id columnaar grouplej davhardliig arilgana"
+						},
+						{
+							"name": "AlterTradeShopTable"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          cusid_cc as integer,",
+						"          trade_shop_name as string,",
+						"          full_address as string,",
+						"          customer_cc_id as integer,",
+						"          customer_name as string,",
+						"          golden_flag as string,",
+						"          store_type as string,",
+						"          customer_register as string,",
+						"          phone_number as string,",
+						"          buying_power as string,",
+						"          location_segment as short,",
+						"          channel as string,",
+						"          sub_channel as string,",
+						"          sales_team as string,",
+						"          delivery_area as string,",
+						"          channel_id as integer,",
+						"          district as string,",
+						"          khoroo as short,",
+						"          customer_created_date as string,",
+						"          longitude as double,",
+						"          latitude as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> ccCustomerFiltered",
+						"notNullCustomers@notNullCustomers aggregate(groupBy(customer_register,",
+						"          customer_cc_id),",
+						"     customer_name = iifNull(min(customer_name), min(trade_shop_name)),",
+						"          full_address = min(full_address),",
+						"          is_reliable_register = iif(min(customer_register) == '0', 0, 1),",
+						"          golden_flag = max(golden_flag),",
+						"          register_type = iif(regexMatch(min(customer_register),  `^\\d+$`), 1,  0),",
+						"          phone_number = max(phone_number),",
+						"          customer_created_date = min(customer_created_date)) ~> CustomerTable",
+						"CustomerTable alterRow(upsertIf(true())) ~> AlterCustomerTable",
+						"CustomerInfoFix split(!and(customer_register == '0', isNull(customer_cc_id)),",
+						"     disjoint: false) ~> notNullCustomers@(notNullCustomers, nullCustomers)",
+						"ccCustomerFiltered derive(customer_register = trim(iif(length(customer_register) <= 6, '0', iifNull(customer_register, '0'))),",
+						"          register_fixed = iif(length(customer_register) <= 6, 1, iif(customer_register == '1000000', 1, 0))) ~> CustomerInfoFix",
+						"CustomerInfoFix select(mapColumn(",
+						"          trade_shop_cc_id = cusid_cc,",
+						"          trade_shop_name,",
+						"          customer_cc_id,",
+						"          customer_register,",
+						"          full_address,",
+						"          longitude,",
+						"          latitude,",
+						"          phone_number,",
+						"          location_segment,",
+						"          e_group_name = channel,",
+						"          store_type,",
+						"          buying_power,",
+						"          sub_channel,",
+						"          sales_team,",
+						"          delivery_area,",
+						"          channel_id,",
+						"          district_subcity = district,",
+						"          sub_district_block = khoroo,",
+						"          trade_shop_created_date = customer_created_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> TradeShopTable",
+						"TradeShopTable filter(!isNull(trade_shop_cc_id)) ~> FilterOutUnknownTradeshops",
+						"FilterOutUnknownTradeshops derive(trade_shop_cc_id = iifNull(trade_shop_cc_id, 0),",
+						"          is_reliable_trade_shop_cc_id = iif(isNull(trade_shop_cc_id), 0, 1)) ~> TradeshopFix",
+						"TradeshopFix aggregate(groupBy(trade_shop_cc_id),",
+						"     trade_shop_name = max(trade_shop_name),",
+						"          is_reliable_trade_shop_ag_id = max(is_reliable_trade_shop_cc_id),",
+						"          full_address = max(full_address),",
+						"          longitude = first(longitude),",
+						"          latitude = first(latitude),",
+						"          phone_number = max(phone_number),",
+						"          store_type = max(store_type),",
+						"          trade_shop_created_date = min(trade_shop_created_date),",
+						"          customer_register = max(customer_register),",
+						"          customer_cc_id = max(customer_cc_id),",
+						"          location_segment = max(location_segment),",
+						"          e_group_name = max(e_group_name),",
+						"          buying_power = max(buying_power),",
+						"          sub_channel = max(sub_channel),",
+						"          sales_team = max(sales_team),",
+						"          delivery_area = max(delivery_area),",
+						"          channel_id = max(channel_id),",
+						"          district_subcity = max(district_subcity),",
+						"          sub_district_block = max(sub_district_block)) ~> GroupByTradeshop",
+						"GroupByTradeshop alterRow(upsertIf(true())) ~> AlterTradeShopTable",
+						"AlterCustomerTable sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['customer_register','customer_cc_id'],",
+						"     format: 'table',",
+						"     batchSize: 5000,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> ccCustomerDWH",
+						"AlterTradeShopTable sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:true,",
+						"     keys:['trade_shop_cc_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> ccTradeShopDWH"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/CC_Customer_Raw_to_Filtered')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -2978,424 +3166,6 @@
 						"     upsertable:false,",
 						"     format: 'table',",
 						"     saveOrder: 1) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TBLEMPEMPLHIST_From_Staging_to_DWH')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "ADLS_Staging_TBLEMPEMPLHIST",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_EMPLOYEE",
-								"type": "DatasetReference"
-							},
-							"name": "source2"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_COMPANY",
-								"type": "DatasetReference"
-							},
-							"name": "source3"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_Department",
-								"type": "DatasetReference"
-							},
-							"name": "source4"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable1_POSITION",
-								"type": "DatasetReference"
-							},
-							"name": "source5"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_Grade",
-								"type": "DatasetReference"
-							},
-							"name": "source6"
-						},
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_SILEVEL",
-								"type": "DatasetReference"
-							},
-							"name": "source7"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "AzureMySqlTable_Fact_employee_hist",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "sourcesystemcode"
-						},
-						{
-							"name": "filter1"
-						},
-						{
-							"name": "joinEmployee"
-						},
-						{
-							"name": "selectEmployee"
-						},
-						{
-							"name": "joinCompany"
-						},
-						{
-							"name": "selectCompany"
-						},
-						{
-							"name": "select4"
-						},
-						{
-							"name": "joinDepartment"
-						},
-						{
-							"name": "selectPosition"
-						},
-						{
-							"name": "joinPosition"
-						},
-						{
-							"name": "select6Grade"
-						},
-						{
-							"name": "selectLevel"
-						},
-						{
-							"name": "joinWithGrade"
-						},
-						{
-							"name": "joinWithLevel"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     cwfolder as string (\"TBLEMPEMPLHIST\")",
-						"}",
-						"source(output(",
-						"          HISTORYID as integer,",
-						"          EMPID as short,",
-						"          BEGINDATE as string,",
-						"          ENDDATE as string,",
-						"          ORDERID as short,",
-						"          ORDERTYPE as string,",
-						"          COMPANYID as string,",
-						"          DEPID as short,",
-						"          POSITIONID as short,",
-						"          GRADEID as short,",
-						"          LEVELID as short,",
-						"          BASEWAGE as integer,",
-						"          BASEWAGECURRCODE as string,",
-						"          CREATED as string,",
-						"          UPDATED as string,",
-						"          ORDERNO as string,",
-						"          OLDDEPNAME as string,",
-						"          JOBID as short,",
-						"          INSURETYPEID as short,",
-						"          LABOURCONDITION as boolean",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: true,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> source1",
-						"source(output(",
-						"          employee_key as long,",
-						"          source_system_code as string,",
-						"          source_employee_id as string,",
-						"          company_id as string,",
-						"          employee_code as string,",
-						"          registration_number as string,",
-						"          family_name as string,",
-						"          last_name as string,",
-						"          first_name as string,",
-						"          gender as string,",
-						"          birth_date as date,",
-						"          nationality_id as integer,",
-						"          employment_status as string,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as integer,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp,",
-						"          etl_batch_id as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source2",
-						"source(output(",
-						"          company_key as integer,",
-						"          company_code as string,",
-						"          company_name as string,",
-						"          is_active as boolean,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source3",
-						"source(output(",
-						"          department_key as integer,",
-						"          source_system_code as string,",
-						"          source_department_id as string,",
-						"          company_key as integer,",
-						"          department_code as string,",
-						"          department_name as string,",
-						"          parent_department_key as integer,",
-						"          department_level as string,",
-						"          is_active as integer,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as integer,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source4",
-						"source(output(",
-						"          position_key as integer,",
-						"          source_system_code as string,",
-						"          source_position_id as string,",
-						"          company_key as integer,",
-						"          position_code as string,",
-						"          position_name as string,",
-						"          position_category as string,",
-						"          position_level as string,",
-						"          is_management as integer,",
-						"          is_active as integer,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as integer,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source5",
-						"source(output(",
-						"          grade_key as integer,",
-						"          grade_id as integer,",
-						"          code as string,",
-						"          grade_no as integer,",
-						"          name as string,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source6",
-						"source(output(",
-						"          level_key as integer,",
-						"          level_id as integer,",
-						"          code as string,",
-						"          name as string,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source7",
-						"joinWithLevel derive(source_system_code = 0,",
-						"          is_current_position = true(),",
-						"          is_multiple = 1,",
-						"          is_active_employment = 1,",
-						"          begin_date = toDate(BEGINDATE, 'yyyy-MM-dd'),",
-						"          end_date = toDate(ENDDATE, 'yyyy-MM-dd'),",
-						"          source_history_id = HISTORYID,",
-						"          source_order_id = ORDERID,",
-						"          order_type = ORDERTYPE,",
-						"          order_number = ORDERNO,",
-						"          level_number = LEVELID,",
-						"          base_wage = BASEWAGE,",
-						"          base_wage_currency = BASEWAGECURRCODE,",
-						"          insurance_type_id = INSURETYPEID,",
-						"          labour_condition = LABOURCONDITION,",
-						"          source_created_date = toTimestamp(CREATED),",
-						"          source_updated_date = toTimestamp(UPDATED),",
-						"          dw_created_date = currentUTC(),",
-						"          dw_updated_date = currentUTC(),",
-						"          etl_batch_id = toLong(currentUTC())) ~> sourcesystemcode",
-						"source1 filter(COMPANYID==\"AG\") ~> filter1",
-						"filter1, selectEmployee join(toString(EMPID) == source_employee_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinEmployee",
-						"source2 select(mapColumn(",
-						"          employee_key,",
-						"          source_employee_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectEmployee",
-						"joinEmployee, selectCompany join(COMPANYID == company_code,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinCompany",
-						"source3 select(mapColumn(",
-						"          company_key,",
-						"          company_code",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectCompany",
-						"source4 select(mapColumn(",
-						"          department_key,",
-						"          source_department_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select4",
-						"joinCompany, select4 join(toString(DEPID) == source_department_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinDepartment",
-						"source5 select(mapColumn(",
-						"          position_key,",
-						"          source_system_code,",
-						"          source_position_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectPosition",
-						"joinDepartment, selectPosition join(toString(POSITIONID) == source_position_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinPosition",
-						"source6 select(mapColumn(",
-						"          grade_key,",
-						"          grade_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select6Grade",
-						"source7 select(mapColumn(",
-						"          level_key,",
-						"          level_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectLevel",
-						"joinPosition, select6Grade join(GRADEID == grade_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinWithGrade",
-						"joinWithGrade, selectLevel join(LEVELID == level_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinWithLevel",
-						"sourcesystemcode sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          history_fact_key as long,",
-						"          employee_key as long,",
-						"          company_key as integer,",
-						"          department_key as integer,",
-						"          position_key as integer,",
-						"          grade_key as integer,",
-						"          level_key as integer,",
-						"          begin_date as date,",
-						"          end_date as date,",
-						"          source_system_code as string,",
-						"          source_history_id as string,",
-						"          source_employee_id as string,",
-						"          source_order_id as string,",
-						"          order_type as string,",
-						"          order_number as string,",
-						"          level_number as integer,",
-						"          base_wage as decimal(18,2),",
-						"          base_wage_currency as string,",
-						"          insurance_type_id as integer,",
-						"          labour_condition as string,",
-						"          is_current_position as integer,",
-						"          is_active_employment as integer,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp,",
-						"          etl_batch_id as long",
-						"     ),",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     saveOrder: 1,",
-						"     mapColumn(",
-						"          employee_key,",
-						"          company_key,",
-						"          department_key,",
-						"          position_key,",
-						"          grade_key,",
-						"          level_key,",
-						"          begin_date,",
-						"          end_date,",
-						"          source_employee_id,",
-						"          order_type = ORDERTYPE,",
-						"          order_number = ORDERNO,",
-						"          level_number = LEVELID,",
-						"          base_wage = BASEWAGE,",
-						"          base_wage_currency = BASEWAGECURRCODE,",
-						"          insurance_type_id = INSURETYPEID,",
-						"          labour_condition = LABOURCONDITION,",
-						"          is_current_position,",
-						"          is_active_employment,",
-						"          source_created_date,",
-						"          source_updated_date,",
-						"          dw_created_date,",
-						"          dw_updated_date,",
-						"          etl_batch_id",
-						"     ),",
-						"     preCommands: [],",
-						"     postCommands: []) ~> sink1"
 					]
 				}
 			},

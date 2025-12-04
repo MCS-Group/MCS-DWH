@@ -81,6 +81,71 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLDEPARTMENT')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "From_Staging_to_DWH_TBLDEPARTMENT",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "From_Staging_to_DWH_TBLDEPARTMENT",
+								"type": "DataFlowReference",
+								"parameters": {
+									"cwfolder": "\"TBLDEPARTMENT\"",
+									"cwtablename": "\"dim_department\""
+								},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "TBLDEPARTMENT"
+									},
+									"source2": {
+										"cwtablename": "dim_company"
+									},
+									"sink1": {
+										"cwtablename": "dim_department"
+									}
+								},
+								"linkedServiceParameters": {
+									"sink1": {
+										"schemaLinkedService": {
+											"cwtablename": "dim_department"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/to_DWH_TBLEMPEMPLHIST')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
