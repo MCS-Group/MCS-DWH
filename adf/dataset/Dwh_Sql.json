@@ -1,0 +1,12 @@
+{
+	"name": "Dwh_Sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDw",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}
