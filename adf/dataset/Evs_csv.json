@@ -5,6 +5,9 @@
 			"referenceName": "linkedService_err",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
