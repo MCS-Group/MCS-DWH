@@ -5,6 +5,9 @@
 			"referenceName": "Azure_DWH_HR_link",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "AzureMySqlTable",
 		"schema": [

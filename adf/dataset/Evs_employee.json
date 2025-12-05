@@ -5,6 +5,9 @@
 			"referenceName": "AzureMySql_allEmployee",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "AzureMySqlTable",
 		"schema": [

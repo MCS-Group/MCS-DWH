@@ -1,6 +1,9 @@
 {
 	"name": "dwh_df_position",
 	"properties": {
+		"folder": {
+			"name": "HR/AzureSqlDw"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [

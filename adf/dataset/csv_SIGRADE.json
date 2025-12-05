@@ -15,6 +15,9 @@
 				"defaultValue": "SIGRADE.csv"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {

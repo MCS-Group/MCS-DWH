@@ -2,7 +2,7 @@
 	"name": "Employee_From_Staging_to_DWH",
 	"properties": {
 		"folder": {
-			"name": "HR"
+			"name": "HR/Mysql"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {

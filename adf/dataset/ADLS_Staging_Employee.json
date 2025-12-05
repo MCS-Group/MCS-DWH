@@ -11,6 +11,9 @@
 				"defaultValue": "TBLEMPLOYEE"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {

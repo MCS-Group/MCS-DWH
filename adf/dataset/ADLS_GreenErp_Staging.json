@@ -13,6 +13,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {

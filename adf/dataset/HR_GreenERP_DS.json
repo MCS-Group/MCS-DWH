@@ -11,6 +11,9 @@
 				"defaultValue": "HREMPLOYEE"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "OracleTable",
 		"schema": [],

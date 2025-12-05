@@ -11,6 +11,9 @@
 				"defaultValue": "SILEVEL"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {

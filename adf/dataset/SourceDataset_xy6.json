@@ -5,6 +5,9 @@
 			"referenceName": "MCS_HR_GreenERP_SC",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "OracleTable",
 		"schema": [],

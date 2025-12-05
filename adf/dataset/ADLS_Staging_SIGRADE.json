@@ -11,6 +11,9 @@
 				"defaultValue": "SIGRADE"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {

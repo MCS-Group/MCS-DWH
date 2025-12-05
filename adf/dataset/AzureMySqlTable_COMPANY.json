@@ -11,6 +11,9 @@
 				"defaultValue": "dim_company"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "AzureMySqlTable",
 		"schema": [

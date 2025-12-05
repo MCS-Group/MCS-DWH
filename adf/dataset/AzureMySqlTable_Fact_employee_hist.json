@@ -11,6 +11,9 @@
 				"defaultValue": "fact_employee_history"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "AzureMySqlTable",
 		"schema": [

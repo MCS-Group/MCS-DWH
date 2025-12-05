@@ -1,6 +1,9 @@
 {
 	"name": "dwh_df_sigrade",
 	"properties": {
+		"folder": {
+			"name": "HR/AzureSqlDw"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [

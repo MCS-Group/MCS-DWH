@@ -11,6 +11,9 @@
 				"defaultValue": "TBLEMPEMPLHIST"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {

@@ -10,6 +10,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "Shared"
+		},
 		"annotations": [],
 		"type": "AzureMySqlTable",
 		"schema": [],

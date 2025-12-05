@@ -11,6 +11,9 @@
 				"defaultValue": "TBLDEPARTMENT"
 			}
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {

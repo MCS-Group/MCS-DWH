@@ -2,7 +2,7 @@
 	"name": "ADLS_Staging_SILEVEL",
 	"properties": {
 		"folder": {
-			"name": "HR"
+			"name": "HR/DataLake"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
