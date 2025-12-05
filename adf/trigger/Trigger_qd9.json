@@ -13,12 +13,6 @@
 					"windowStart": "@{addhours(trigger().scheduledTime, -24)}",
 					"windowEnd": "@trigger().scheduledTime"
 				}
-			},
-			{
-				"pipelineReference": {
-					"referenceName": "to_DWH_TBLPOSITION",
-					"type": "PipelineReference"
-				}
 			}
 		],
 		"type": "ScheduleTrigger",
