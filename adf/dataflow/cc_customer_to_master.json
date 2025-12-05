@@ -39,10 +39,10 @@
 					"name": "selectMaster"
 				},
 				{
-					"name": "customerAgId"
+					"name": "aggregateDedup"
 				},
 				{
-					"name": "aggregate1"
+					"name": "customerAgId"
 				}
 			],
 			"scriptLines": [
@@ -85,12 +85,16 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> selectMaster",
-				"aggregate1 select(mapColumn(",
+				"deriveClean aggregate(groupBy(customer_register),",
+				"     {id_first } = first(id),",
+				"     groupBy: customer_register,",
+				"     aggregations: (",
+				"        id_first =)) ~> aggregateDedup",
+				"aggregateDedup select(mapColumn(",
 				"          customer_master_id = id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> customerAgId",
-				"deriveClean aggregate(groupBy(customer_register)) ~> aggregate1",
 				"selectMaster sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
