@@ -87,6 +87,7 @@
 				"     skipDuplicateMapOutputs: false) ~> selectMaster",
 				"deriveClean aggregate(groupBy(customer_register),",
 				"     {id_first } = first(id),",
+				"          is_reliable_register_max = max(is_reliable_register),",
 				"     groupBy: customer_register,",
 				"     aggregations: (",
 				"        id_first =)) ~> aggregateDedup",
