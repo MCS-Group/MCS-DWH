@@ -27,6 +27,9 @@
 				}
 			}
 		],
+		"folder": {
+			"name": "HR Pipelines/EVS"
+		},
 		"annotations": [],
 		"lastPublishTime": "2025-11-25T09:03:50Z"
 	},
