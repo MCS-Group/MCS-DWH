@@ -5,6 +5,9 @@
 			"referenceName": "MCS_FMCG_DWH_SqlServerConn",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "HR"
+		},
 		"annotations": [],
 		"type": "SqlServerTable",
 		"schema": [],
