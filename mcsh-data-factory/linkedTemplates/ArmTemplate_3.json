@@ -75,6 +75,9 @@
 						"defaultValue": "SIGRADE.csv"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -117,6 +120,9 @@
 						"type": "string",
 						"defaultValue": "SILEVEL.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -232,6 +238,9 @@
 					"referenceName": "MCS_FMCG_DWH_SqlServerConn",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "SqlServerTable",
 				"schema": [],
@@ -257,6 +266,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "SqlServerTable",
@@ -286,6 +298,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "SqlServerTable",
@@ -317,6 +332,9 @@
 						"defaultValue": "HREMPLOYEE"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "OracleTable",
 				"schema": [],
@@ -346,6 +364,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "OracleTable",
 				"schema": [],
@@ -370,6 +391,9 @@
 					"referenceName": "MCS_HR_GreenERP_SC",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "OracleTable",
 				"schema": [],
@@ -387,7 +411,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -472,7 +496,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -562,7 +586,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -662,7 +686,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -776,7 +800,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -905,7 +929,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -1038,7 +1062,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {

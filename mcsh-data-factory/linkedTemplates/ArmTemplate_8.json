@@ -59,6 +59,26 @@
 			"type": "string",
 			"defaultValue": "td_dwh_full_trade_shop_gps.csv"
 		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table": {
+			"type": "string",
+			"defaultValue": "BigOneFullCustomers"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table": {
+			"type": "string",
+			"defaultValue": "TradeshopGPS_AG"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder": {
+			"type": "string",
+			"defaultValue": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+		},
 		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
 			"type": "string",
 			"defaultValue": "utcNow()"
@@ -449,6 +469,19 @@
 							"dest_folder": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder')]",
 							"dest_customer_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file')]",
 							"dest_gps_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file')]"
+						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Customer_Full_Flow_SQL",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"src_customer_table": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table')]",
+							"src_tradeshop_gps_table": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table')]",
+							"dest_folder": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder')]",
+							"dest_customer_file": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file')]",
+							"dest_gps_file": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file')]"
 						}
 					}
 				],

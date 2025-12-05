@@ -215,6 +215,26 @@
 			"type": "string",
 			"defaultValue": "td_dwh_full_trade_shop_gps.csv"
 		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table": {
+			"type": "string",
+			"defaultValue": "BigOneFullCustomers"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table": {
+			"type": "string",
+			"defaultValue": "TradeshopGPS_AG"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder": {
+			"type": "string",
+			"defaultValue": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+		},
 		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
 			"type": "string",
 			"defaultValue": "utcNow()"
@@ -8677,6 +8697,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Merchant"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -8719,6 +8742,9 @@
 					"csv_fileName": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -8765,6 +8791,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -8808,6 +8837,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Merchant"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -8850,6 +8882,9 @@
 					"csv_directory": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -8896,6 +8931,9 @@
 					"folderName": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -8981,6 +9019,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -9021,6 +9062,9 @@
 						"type": "String",
 						"defaultValue": "TBLDEPARTMENT"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -9100,6 +9144,9 @@
 						"type": "String",
 						"defaultValue": "TBLEMPLOYEE"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -9438,6 +9485,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -9476,6 +9526,9 @@
 						"defaultValue": "SIGRADE"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -9509,6 +9562,9 @@
 						"type": "String",
 						"defaultValue": "SILEVEL"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -9569,6 +9625,9 @@
 						"defaultValue": "TBLCOMPANY"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -9623,6 +9682,9 @@
 						"type": "String",
 						"defaultValue": "TBLDEPARTMENT"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -9703,6 +9765,9 @@
 						"defaultValue": "TBLEMPEMPLHIST"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -9756,6 +9821,9 @@
 					"cwfolder": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -9864,6 +9932,9 @@
 						"defaultValue": "TBLCOMPANY"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -9918,6 +9989,9 @@
 						"type": "String",
 						"defaultValue": "dim_employee"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -10075,6 +10149,9 @@
 						"defaultValue": "dim_position"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -10195,6 +10272,9 @@
 						"defaultValue": "dim_company"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -10278,6 +10358,9 @@
 						"type": "String",
 						"defaultValue": "dim_department"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -10392,6 +10475,9 @@
 						"type": "String",
 						"defaultValue": "dim_employee"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -10548,6 +10634,9 @@
 						"type": "String",
 						"defaultValue": "fact_employee_history"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -10741,6 +10830,9 @@
 						"defaultValue": "dim_grade"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -10831,6 +10923,9 @@
 						"defaultValue": "dim_grade"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -10915,6 +11010,9 @@
 						"defaultValue": "dim_level"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -10992,6 +11090,9 @@
 				"linkedServiceName": {
 					"referenceName": "Azure_DWH_HR_link",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -11151,6 +11252,9 @@
 				"linkedServiceName": {
 					"referenceName": "Azure_DWH_HR_link",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -11316,6 +11420,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "Shared"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [],
@@ -11343,6 +11450,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -11374,6 +11484,9 @@
 					"schema": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Shared"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -11409,6 +11522,9 @@
 					"schema": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -11509,6 +11625,9 @@
 					"referenceName": "AzureDataLakeStorage1",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "Shared"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -11542,6 +11661,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureSqlTable",
 				"schema": [],
@@ -11573,6 +11695,9 @@
 					"cw_schema": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "Shared"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -11610,6 +11735,9 @@
 						"type": "string",
 						"defaultValue": "HREMPLOYEE.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -11947,6 +12075,9 @@
 					"referenceName": "linkedService_err",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -11974,6 +12105,9 @@
 				"linkedServiceName": {
 					"referenceName": "AzureMySql_allEmployee",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -12092,6 +12226,9 @@
 					"referenceName": "MCS_FMCG_DWH_SqlServerConn",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "SqlServerTable",
 				"schema": [],
@@ -12117,6 +12254,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "SqlServerTable",
@@ -12146,6 +12286,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "SqlServerTable",
@@ -12177,6 +12320,9 @@
 						"defaultValue": "HREMPLOYEE"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "OracleTable",
 				"schema": [],
@@ -12206,6 +12352,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "OracleTable",
 				"schema": [],
@@ -12229,6 +12378,9 @@
 				"linkedServiceName": {
 					"referenceName": "MCS_HR_GreenERP_SC",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "OracleTable",
@@ -12259,6 +12411,9 @@
 						"type": "string",
 						"defaultValue": "TBLPOSITION.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -12305,6 +12460,9 @@
 						"defaultValue": "SIGRADE.csv"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -12349,6 +12507,9 @@
 						"type": "string",
 						"defaultValue": "SILEVEL.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -12853,6 +13014,19 @@
 							"dest_customer_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file')]",
 							"dest_gps_file": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file')]"
 						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "AG_Customer_Full_Flow_SQL",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"src_customer_table": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table')]",
+							"src_tradeshop_gps_table": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table')]",
+							"dest_folder": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder')]",
+							"dest_customer_file": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file')]",
+							"dest_gps_file": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -12875,7 +13049,8 @@
 				"[concat(variables('factoryId'), '/pipelines/CC_MainDB_to_Raw')]",
 				"[concat(variables('factoryId'), '/pipelines/TD_MainDB_to_Raw')]",
 				"[concat(variables('factoryId'), '/pipelines/CC_Small_Tables_Full_Extract')]",
-				"[concat(variables('factoryId'), '/pipelines/TD_Customer_Full_Flow')]"
+				"[concat(variables('factoryId'), '/pipelines/TD_Customer_Full_Flow')]",
+				"[concat(variables('factoryId'), '/pipelines/AG_Customer_Full_Flow_SQL')]"
 			]
 		},
 		{
@@ -13030,7 +13205,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13116,7 +13291,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13207,7 +13382,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13310,7 +13485,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13427,7 +13602,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13559,7 +13734,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -13695,7 +13870,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/DataLake"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -16796,7 +16971,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -16983,7 +17158,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17134,7 +17309,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17297,7 +17472,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17390,7 +17565,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17473,7 +17648,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17569,7 +17744,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -17996,7 +18171,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"folder": {
-					"name": "HR"
+					"name": "HR/Mysql"
 				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
@@ -18666,6 +18841,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -18771,6 +18949,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -18907,6 +19088,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -19100,6 +19284,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -19496,6 +19683,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -19570,6 +19760,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -19930,6 +20123,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -20116,6 +20312,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
@@ -20218,6 +20417,9 @@
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "HR/AzureSqlDw"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [

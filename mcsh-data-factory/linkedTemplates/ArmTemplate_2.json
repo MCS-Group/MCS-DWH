@@ -27,6 +27,9 @@
 						"defaultValue": "dim_company"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -108,6 +111,9 @@
 						"type": "String",
 						"defaultValue": "dim_department"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -220,6 +226,9 @@
 						"type": "String",
 						"defaultValue": "dim_employee"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -374,6 +383,9 @@
 						"type": "String",
 						"defaultValue": "fact_employee_history"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -565,6 +577,9 @@
 						"defaultValue": "dim_grade"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -653,6 +668,9 @@
 						"defaultValue": "dim_grade"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -735,6 +753,9 @@
 						"defaultValue": "dim_level"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [
@@ -810,6 +831,9 @@
 				"linkedServiceName": {
 					"referenceName": "Azure_DWH_HR_link",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -967,6 +991,9 @@
 				"linkedServiceName": {
 					"referenceName": "Azure_DWH_HR_link",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -1130,6 +1157,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "Shared"
+				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
 				"schema": [],
@@ -1155,6 +1185,9 @@
 					"cw_table": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -1184,6 +1217,9 @@
 					"schema": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Shared"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -1217,6 +1253,9 @@
 					"schema": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -1315,6 +1354,9 @@
 					"referenceName": "AzureDataLakeStorage1",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "Shared"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -1346,6 +1388,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "AzureSqlTable",
 				"schema": [],
@@ -1375,6 +1420,9 @@
 					"cw_schema": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "Shared"
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
@@ -1410,6 +1458,9 @@
 						"type": "string",
 						"defaultValue": "HREMPLOYEE.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -1745,6 +1796,9 @@
 					"referenceName": "linkedService_err",
 					"type": "LinkedServiceReference"
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -1770,6 +1824,9 @@
 				"linkedServiceName": {
 					"referenceName": "AzureMySql_allEmployee",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -1895,6 +1952,9 @@
 						"type": "string",
 						"defaultValue": "TBLPOSITION.csv"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",

@@ -36,6 +36,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Merchant"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -76,6 +79,9 @@
 					"csv_fileName": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -120,6 +126,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -161,6 +170,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Merchant"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -201,6 +213,9 @@
 					"csv_directory": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Merchant"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -245,6 +260,9 @@
 					"folderName": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -328,6 +346,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -366,6 +387,9 @@
 						"type": "String",
 						"defaultValue": "TBLDEPARTMENT"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -443,6 +467,9 @@
 						"type": "String",
 						"defaultValue": "TBLEMPLOYEE"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -779,6 +806,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -815,6 +845,9 @@
 						"defaultValue": "SIGRADE"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -846,6 +879,9 @@
 						"type": "String",
 						"defaultValue": "SILEVEL"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -904,6 +940,9 @@
 						"defaultValue": "TBLCOMPANY"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -956,6 +995,9 @@
 						"type": "String",
 						"defaultValue": "TBLDEPARTMENT"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -1034,6 +1076,9 @@
 						"defaultValue": "TBLEMPEMPLHIST"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -1085,6 +1130,9 @@
 					"cwfolder": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -1191,6 +1239,9 @@
 						"defaultValue": "TBLCOMPANY"
 					}
 				},
+				"folder": {
+					"name": "HR"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -1243,6 +1294,9 @@
 						"type": "String",
 						"defaultValue": "dim_employee"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
@@ -1397,6 +1451,9 @@
 						"type": "String",
 						"defaultValue": "dim_position"
 					}
+				},
+				"folder": {
+					"name": "HR"
 				},
 				"annotations": [],
 				"type": "AzureMySqlTable",
