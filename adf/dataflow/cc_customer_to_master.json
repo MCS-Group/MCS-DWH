@@ -55,9 +55,6 @@
 					"name": "splitRecords"
 				},
 				{
-					"name": "addRowNumber"
-				},
-				{
 					"name": "crossJoinMaxId"
 				},
 				{
@@ -68,6 +65,9 @@
 				},
 				{
 					"name": "selectForUpdate"
+				},
+				{
+					"name": "addRowNumber"
 				}
 			],
 			"scriptLines": [
@@ -132,9 +132,6 @@
 				"     broadcast: 'auto')~> lookupExisting",
 				"lookupExisting split(isNull(sourceMaster@customer_register),",
 				"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
-				"splitRecords@newRecords keyGenerate(output(row_num as long),",
-				"     startAt: 1L,",
-				"     stepValue: 1L) ~> addRowNumber",
 				"addRowNumber, getMaxMasterId join(true(),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
@@ -173,6 +170,8 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
+				"splitRecords@newRecords window(asc(splitRecords@newRecords@customer_register, true),",
+				"     row_num = rowNumber()) ~> addRowNumber",
 				"selectForUpdate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
