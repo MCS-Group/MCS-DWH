@@ -182,7 +182,7 @@
 				"splitRecords@newRecords window(asc(customer_register, true),",
 				"     row_num = rowNumber()) ~> addRowNumber",
 				"chosenSource select(mapColumn(",
-				"          id = aggregateDedup@id,",
+				"          id = sourceMaster@id,",
 				"          is_reliable_register,",
 				"          register_type = aggregateDedup@register_type,",
 				"          customer_master_id,",
