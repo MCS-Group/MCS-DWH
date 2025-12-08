@@ -95,8 +95,6 @@
 				"          customer_created_date = min(customer_created_date),",
 				"          created_at = last(created_at),",
 				"          updated_at = last(updated_at),",
-				"          id_ag_last = last(id),",
-				"          customer_name = last(customer_name),",
 				"     groupBy: customer_register,",
 				"     aggregations: (",
 				"        id_first =)) ~> aggregateDedup",
