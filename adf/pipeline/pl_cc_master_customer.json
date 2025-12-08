@@ -1,0 +1,53 @@
+{
+	"name": "pl_cc_master_customer",
+	"properties": {
+		"activities": [
+			{
+				"name": "cc_customer_to_master",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "cc_customer_to_master",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceCC": {
+								"cw_table": "cc_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"sourceMaster": {
+								"cw_table": "dwh_customer_master",
+								"cw_schema": "mch"
+							},
+							"sinkMaster": {
+								"cw_table": "dwh_customer_master",
+								"cw_schema": "mch"
+							},
+							"sinkInsertMaster": {
+								"cw_table": "dwh_customer_master",
+								"cw_schema": "mch"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "CC Pipelines/Customer"
+		},
+		"annotations": []
+	}
+}
