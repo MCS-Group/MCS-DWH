@@ -208,7 +208,7 @@
 				"          updated_at = iif(isNull(sourceMaster@updated_at) || aggregateDedup@updated_at>sourceMaster@updated_at, aggregateDedup@updated_at,sourceMaster@updated_at),",
 				"          customer_master_id = customer_master_id,",
 				"          customer_master_id_prime = customer_master_id_prime) ~> chosenSource",
-				"selectForUpdate alterRow(updateIf(id)) ~> AlterRow1",
+				"selectForUpdate alterRow(updateIf(true())) ~> AlterRow1",
 				"AlterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
