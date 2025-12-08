@@ -15,7 +15,11 @@
 					"name": "sourceCC"
 				},
 				{
-					"name": "source1"
+					"dataset": {
+						"referenceName": "Dwh_Sql",
+						"type": "DatasetReference"
+					},
+					"name": "sourceMaster"
 				}
 			],
 			"sinks": [
@@ -46,6 +50,9 @@
 				},
 				{
 					"name": "customerAgId"
+				},
+				{
+					"name": "join1"
 				}
 			],
 			"scriptLines": [
@@ -68,7 +75,9 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceCC",
 				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> source1",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceMaster",
 				"sourceCC derive(customer_register = upper(trim(customer_register)),",
 				"          customer_name = trim(customer_name),",
 				"          full_address = trim(full_address),",
@@ -100,11 +109,16 @@
 				"          customer_created_date = min(customer_created_date),",
 				"          created_at = last(created_at),",
 				"          updated_at = last(updated_at)) ~> aggregateDedup",
-				"aggregateDedup select(mapColumn(",
+				"join1 select(mapColumn(",
 				"          customer_master_id = id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> customerAgId",
+				"aggregateDedup, sourceMaster join(customer_register == ERROR_FUNCTION(''),",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
 				"selectMaster sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
