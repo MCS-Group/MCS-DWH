@@ -68,6 +68,12 @@
 				},
 				{
 					"name": "addRowNumber"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "chosenSource"
 				}
 			],
 			"scriptLines": [
@@ -130,7 +136,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> lookupExisting",
-				"lookupExisting split(isNull(sourceMaster@customer_register),",
+				"select1 split(isNull(master_customer_register),",
 				"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
 				"addRowNumber, getMaxMasterId join(true(),",
 				"     joinType:'cross',",
@@ -170,8 +176,28 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
-				"splitRecords@newRecords window(asc(splitRecords@newRecords@customer_register, true),",
+				"splitRecords@newRecords window(asc(customer_register, true),",
 				"     row_num = rowNumber()) ~> addRowNumber",
+				"chosenSource select(mapColumn(",
+				"          id = aggregateDedup@id,",
+				"          is_reliable_register,",
+				"          register_type = aggregateDedup@register_type,",
+				"          customer_master_id,",
+				"          customer_master_id_prime,",
+				"          phone_number = phone_number_new,",
+				"          full_address = full_address_new,",
+				"          golden_flag = golden_flag_new,",
+				"          customer_created_date = customer_created_date_new,",
+				"          master_customer_register = sourceMaster@customer_register,",
+				"          customer_register = aggregateDedup@customer_register",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"lookupExisting derive(phone_number_new = iif(isNull(sourceMaster@phone_number) || length(aggregateDedup@phone_number)>length(sourceMaster@phone_number), aggregateDedup@phone_number,sourceMaster@phone_number),",
+				"          full_address_new = iif(isNull(sourceMaster@full_address) || length(aggregateDedup@full_address)>length(sourceMaster@full_address), aggregateDedup@full_address,sourceMaster@full_address),",
+				"          customer_name = iif(isNull(sourceMaster@customer_name) || length(aggregateDedup@customer_name)>length(sourceMaster@customer_name), aggregateDedup@customer_name,sourceMaster@customer_name),",
+				"          golden_flag_new = iif(isNull(sourceMaster@golden_flag) || length(aggregateDedup@golden_flag)>length(sourceMaster@golden_flag), aggregateDedup@golden_flag,sourceMaster@golden_flag),",
+				"          customer_created_date_new = iif(isNull(sourceMaster@customer_created_date) || aggregateDedup@customer_created_date<sourceMaster@customer_created_date, aggregateDedup@customer_created_date,sourceMaster@customer_created_date)) ~> chosenSource",
 				"selectForUpdate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
