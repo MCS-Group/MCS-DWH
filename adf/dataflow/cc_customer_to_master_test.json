@@ -1,0 +1,60 @@
+{
+	"name": "cc_customer_to_master_test",
+	"properties": {
+		"folder": {
+			"name": "CC"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Dwh_Sql",
+						"type": "DatasetReference"
+					},
+					"name": "sourceCC"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "max"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          id as integer,",
+				"          customer_cc_id as integer,",
+				"          customer_register as string,",
+				"          is_reliable_register as integer,",
+				"          customer_name as string,",
+				"          full_address as string,",
+				"          golden_flag as string,",
+				"          register_type as integer,",
+				"          phone_number as string,",
+				"          customer_created_date as timestamp,",
+				"          created_at as timestamp,",
+				"          updated_at as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceCC",
+				"sourceCC select(mapColumn(",
+				"          customer_cc_id,",
+				"          customer_register",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 aggregate(groupBy(customer_register),",
+				"     customer_cc_ids = max(customer_cc_id),",
+				"     groupBy: customer_register,",
+				"     aggregations: (",
+				"            customer_cc_id =) ~> max"
+			]
+		}
+	}
+}
