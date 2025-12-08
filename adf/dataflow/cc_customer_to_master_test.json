@@ -21,7 +21,7 @@
 					"name": "select1"
 				},
 				{
-					"name": "max"
+					"name": "maxs"
 				}
 			],
 			"scriptLines": [
@@ -43,17 +43,18 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceCC",
-				"sourceCC select(mapColumn(",
-				"          customer_cc_id,",
-				"          customer_register",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
+				"sourceCC select(skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
 				"select1 aggregate(groupBy(customer_register),",
-				"     customer_cc_ids = max(customer_cc_id),",
-				"     groupBy: customer_register,",
-				"     aggregations: (",
-				"            customer_cc_id =) ~> max"
+				"     is_reliable_register = max(is_reliable_register),",
+				"          phone_number = max(phone_number),",
+				"          register_type = max(register_type),",
+				"          full_address = last(full_address),",
+				"          customer_name = min(customer_name),",
+				"          customer_created_date = min(customer_created_date),",
+				"          created_at = last(created_at),",
+				"          updated_at = last(updated_at),",
+				"          id = max(id)) ~> maxs"
 			]
 		}
 	}

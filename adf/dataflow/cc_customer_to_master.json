@@ -13,6 +13,9 @@
 						"type": "DatasetReference"
 					},
 					"name": "sourceCC"
+				},
+				{
+					"name": "source1"
 				}
 			],
 			"sinks": [
@@ -64,6 +67,8 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceCC",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> source1",
 				"sourceCC derive(customer_register = upper(trim(customer_register)),",
 				"          customer_name = trim(customer_name),",
 				"          full_address = trim(full_address),",
