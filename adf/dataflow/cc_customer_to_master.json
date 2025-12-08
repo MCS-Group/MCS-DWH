@@ -71,6 +71,12 @@
 				},
 				{
 					"name": "generateMasterIds"
+				},
+				{
+					"name": "selectForInsert"
+				},
+				{
+					"name": "selectForUpdate"
 				}
 			],
 			"scriptLines": [
@@ -172,6 +178,37 @@
 				"     broadcast: 'right')~> crossJoinMaxId",
 				"crossJoinMaxId derive(customer_master_id = coalesce(max_customer_master_id, toLong(0)) + toLong(row_num),",
 				"          customer_master_id_prime = mod((12534191 * (coalesce(max_customer_master_id, toLong(0)) + toLong(row_num)) + 12534217), 100000000)) ~> generateMasterIds",
+				"generateMasterIds select(mapColumn(",
+				"          customer_master_id,",
+				"          customer_master_id_prime,",
+				"          customer_register,",
+				"          register_type,",
+				"          golden_flag,",
+				"          customer_name,",
+				"          full_address,",
+				"          phone_number,",
+				"          customer_created_date,",
+				"          created_at,",
+				"          updated_at",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectForInsert",
+				"splitRecords@existingRecords select(mapColumn(",
+				"          id = {sourceMaster@id},",
+				"          customer_master_id = {sourceMaster@customer_master_id},",
+				"          customer_master_id_prime = {sourceMaster@customer_master_id_prime},",
+				"          customer_register = {aggregateDedup@customer_register},",
+				"          register_type = {aggregateDedup@register_type},",
+				"          golden_flag = {aggregateDedup@golden_flag},",
+				"          customer_name = {aggregateDedup@customer_name},",
+				"          full_address = {aggregateDedup@full_address},",
+				"          phone_number = {aggregateDedup@phone_number},",
+				"          customer_created_date = {sourceMaster@customer_created_date},",
+				"          created_at = {sourceMaster@created_at},",
+				"          updated_at = {aggregateDedup@updated_at}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
 				"selectMaster sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
