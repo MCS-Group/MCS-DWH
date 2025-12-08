@@ -74,6 +74,9 @@
 				},
 				{
 					"name": "chosenSource"
+				},
+				{
+					"name": "AlterRow1"
 				}
 			],
 			"scriptLines": [
@@ -205,12 +208,14 @@
 				"          updated_at = iif(isNull(sourceMaster@updated_at) || aggregateDedup@updated_at>sourceMaster@updated_at, aggregateDedup@updated_at,sourceMaster@updated_at),",
 				"          customer_master_id = customer_master_id,",
 				"          customer_master_id_prime = customer_master_id_prime) ~> chosenSource",
-				"selectForUpdate sink(allowSchemaDrift: true,",
+				"selectForUpdate alterRow(updateIf(id)) ~> AlterRow1",
+				"AlterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
-				"     insertable:true,",
-				"     updateable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
 				"     upsertable:false,",
+				"     keys:['id'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
