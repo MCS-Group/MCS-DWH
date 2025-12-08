@@ -53,6 +53,15 @@
 				},
 				{
 					"name": "join1"
+				},
+				{
+					"name": "selectMasterSource"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "derivedColumn1"
 				}
 			],
 			"scriptLines": [
@@ -74,7 +83,21 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceCC",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          id as integer,",
+				"          customer_master_id as integer,",
+				"          customer_master_id_prime as integer,",
+				"          customer_register as string,",
+				"          register_type as integer,",
+				"          golden_flag as string,",
+				"          customer_name as string,",
+				"          full_address as string,",
+				"          phone_number as string,",
+				"          created_at as timestamp,",
+				"          updated_at as timestamp,",
+				"          customer_created_date as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceMaster",
@@ -109,16 +132,26 @@
 				"          customer_created_date = min(customer_created_date),",
 				"          created_at = last(created_at),",
 				"          updated_at = last(updated_at)) ~> aggregateDedup",
-				"join1 select(mapColumn(",
+				"derivedColumn1 select(mapColumn(",
 				"          customer_master_id = id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> customerAgId",
-				"aggregateDedup, sourceMaster join(customer_register == ERROR_FUNCTION(''),",
-				"     joinType:'inner',",
+				"aggregateDedup, selectMasterSource join(aggregateDedup@customer_register == selectMasterSource@customer_register,",
+				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> join1",
+				"sourceMaster select(mapColumn(",
+				"          customer_master_id,",
+				"          customer_master_id_prime,",
+				"          customer_register",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectMasterSource",
+				"join1 split(isNull(selectMasterSource@customer_register),",
+				"     disjoint: false) ~> split1@(NotExistInMaster, ExistInMaster)",
+				"split1@NotExistInMaster derive() ~> derivedColumn1",
 				"selectMaster sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
