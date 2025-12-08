@@ -49,19 +49,28 @@
 					"name": "aggregateDedup"
 				},
 				{
+					"name": "getMaxMasterId"
+				},
+				{
 					"name": "customerAgId"
 				},
 				{
-					"name": "join1"
+					"name": "lookupExisting"
 				},
 				{
 					"name": "selectMasterSource"
 				},
 				{
-					"name": "split1"
+					"name": "splitRecords"
 				},
 				{
-					"name": "derivedColumn1"
+					"name": "addRowNumber"
+				},
+				{
+					"name": "crossJoinMaxId"
+				},
+				{
+					"name": "generateMasterIds"
 				}
 			],
 			"scriptLines": [
@@ -125,14 +134,16 @@
 				"deriveClean aggregate(groupBy(customer_register),",
 				"     id = first(id),",
 				"          is_reliable_register = max(is_reliable_register),",
-				"          phone_number = max(phone_number),",
+				"          phone_number = first(phone_number, golden_flag == 'Y'),",
 				"          register_type = max(register_type),",
-				"          full_address = last(full_address),",
-				"          customer_name = min(customer_name),",
+				"          full_address = first(full_address, golden_flag == 'Y'),",
+				"          customer_name = first(customer_name, golden_flag == 'Y'),",
+				"          golden_flag = iif(countIf(golden_flag == 'Y') > 0, 'Y', 'N'),",
 				"          customer_created_date = min(customer_created_date),",
-				"          created_at = last(created_at),",
-				"          updated_at = last(updated_at)) ~> aggregateDedup",
-				"derivedColumn1 select(mapColumn(",
+				"          created_at = max(created_at),",
+				"          updated_at = max(updated_at)) ~> aggregateDedup",
+				"sourceMaster aggregate(max_customer_master_id = max(customer_master_id)) ~> getMaxMasterId",
+				" select(mapColumn(",
 				"          customer_master_id = id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
@@ -141,7 +152,7 @@
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> join1",
+				"     broadcast: 'auto')~> lookupExisting",
 				"sourceMaster select(mapColumn(",
 				"          customer_master_id,",
 				"          customer_master_id_prime,",
@@ -149,9 +160,18 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectMasterSource",
-				"join1 split(isNull(selectMasterSource@customer_register),",
-				"     disjoint: false) ~> split1@(NotExistInMaster, ExistInMaster)",
-				"split1@NotExistInMaster derive() ~> derivedColumn1",
+				"lookupExisting split(isNull(selectMasterSource@customer_register),",
+				"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
+				"splitRecords@newRecords keyGenerate(output(row_num as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> addRowNumber",
+				"addRowNumber, getMaxMasterId join(true(),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> crossJoinMaxId",
+				"crossJoinMaxId derive(customer_master_id = coalesce(max_customer_master_id, toLong(0)) + toLong(row_num),",
+				"          customer_master_id_prime = mod((12534191 * (coalesce(max_customer_master_id, toLong(0)) + toLong(row_num)) + 12534217), 100000000)) ~> generateMasterIds",
 				"selectMaster sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
