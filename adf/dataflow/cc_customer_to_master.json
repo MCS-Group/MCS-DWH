@@ -43,22 +43,13 @@
 					"name": "deriveClean"
 				},
 				{
-					"name": "selectMaster"
-				},
-				{
 					"name": "aggregateDedup"
 				},
 				{
 					"name": "getMaxMasterId"
 				},
 				{
-					"name": "customerAgId"
-				},
-				{
 					"name": "lookupExisting"
-				},
-				{
-					"name": "selectMasterSource"
 				},
 				{
 					"name": "splitRecords"
@@ -122,21 +113,6 @@
 				"          golden_flag = iif(isNull(golden_flag) || golden_flag == '', 'N', golden_flag),",
 				"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
 				"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0)) ~> deriveClean",
-				"deriveClean select(mapColumn(",
-				"          customer_master_id = id,",
-				"          customer_master_id_prime = id,",
-				"          customer_register,",
-				"          register_type,",
-				"          golden_flag,",
-				"          customer_name,",
-				"          full_address,",
-				"          phone_number,",
-				"          customer_created_date,",
-				"          created_at,",
-				"          updated_at",
-				"     ),",
-				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> selectMaster",
 				"deriveClean aggregate(groupBy(customer_register),",
 				"     id = first(id),",
 				"          is_reliable_register = max(is_reliable_register),",
@@ -149,23 +125,11 @@
 				"          created_at = max(created_at),",
 				"          updated_at = max(updated_at)) ~> aggregateDedup",
 				"sourceMaster aggregate(max_customer_master_id = max(customer_master_id)) ~> getMaxMasterId",
-				" select(mapColumn(",
-				"          customer_master_id = id",
-				"     ),",
-				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> customerAgId",
-				"aggregateDedup, selectMasterSource join(aggregateDedup@customer_register == selectMasterSource@customer_register,",
+				"aggregateDedup, sourceMaster join(aggregateDedup@customer_register == selectMasterSource@customer_register,",
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> lookupExisting",
-				"sourceMaster select(mapColumn(",
-				"          customer_master_id,",
-				"          customer_master_id_prime,",
-				"          customer_register",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> selectMasterSource",
 				"lookupExisting split(isNull(selectMasterSource@customer_register),",
 				"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
 				"splitRecords@newRecords keyGenerate(output(row_num as long),",
@@ -209,7 +173,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
-				"selectMaster sink(allowSchemaDrift: true,",
+				"selectForUpdate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
 				"     insertable:true,",
