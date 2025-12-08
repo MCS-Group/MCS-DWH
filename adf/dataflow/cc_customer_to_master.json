@@ -35,7 +35,7 @@
 						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
-					"name": "sinkLink"
+					"name": "sinkInsertMaster"
 				}
 			],
 			"transformations": [
@@ -219,7 +219,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError') ~> sinkMaster",
-				"customerAgId sink(allowSchemaDrift: true,",
+				"selectForInsert sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
 				"     insertable:true,",
@@ -228,7 +228,7 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sinkLink"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster"
 			]
 		}
 	}
