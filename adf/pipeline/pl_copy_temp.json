@@ -1,0 +1,61 @@
+{
+	"name": "pl_copy_temp",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureMySqlSource",
+						"query": "select * FROM datawarehouse.dwh_customer_master\nWHERE customer_register IN ('0001538', '0002127', '0002135', '0002267', '0002445', '0002518') ",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DWH_Mysql",
+						"type": "DatasetReference",
+						"parameters": {
+							"cw_table": "dwh_customer_master"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Dwh_Sql",
+						"type": "DatasetReference",
+						"parameters": {
+							"cw_table": "dwh_customer_master",
+							"cw_schema": "mch"
+						}
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
