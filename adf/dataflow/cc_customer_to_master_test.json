@@ -15,7 +15,15 @@
 					"name": "sourceCC"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ADLS_Raw_CSV",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "select1"
@@ -54,7 +62,14 @@
 				"          customer_created_date = min(customer_created_date),",
 				"          created_at = last(created_at),",
 				"          updated_at = last(updated_at),",
-				"          id = max(id)) ~> maxs"
+				"          id = max(id)) ~> maxs",
+				"maxs sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
 			]
 		}
 	}
