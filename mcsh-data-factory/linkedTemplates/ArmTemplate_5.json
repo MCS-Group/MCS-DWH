@@ -13,6 +13,99 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/TBLCOMPANY_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLCOMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPANYID as string,",
+						"          NAME as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          PARENTID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(company_code = COMPANYID,",
+						"          company_name = NAME,",
+						"          is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED),",
+						"          source_updated_date = toTimestamp(UPDATED),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC()) ~> transform1",
+						"transform1 select(mapColumn(",
+						"          company_code,",
+						"          company_name,",
+						"          is_active,",
+						"          source_system_code,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/TBLEMPEMPLHIST_From_Staging_to_DWH')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -699,6 +792,324 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     partitionBy('hash', 1)) ~> tdFilteredCSV"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/cc_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceCC"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceMaster"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sinkMaster"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sinkInsertMaster"
+						}
+					],
+					"transformations": [
+						{
+							"name": "deriveClean"
+						},
+						{
+							"name": "aggregateDedup"
+						},
+						{
+							"name": "getMaxMasterId"
+						},
+						{
+							"name": "lookupExisting"
+						},
+						{
+							"name": "splitRecords"
+						},
+						{
+							"name": "crossJoinMaxId"
+						},
+						{
+							"name": "generateMasterIds"
+						},
+						{
+							"name": "selectForInsert"
+						},
+						{
+							"name": "selectForUpdate"
+						},
+						{
+							"name": "addRowNumber"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "chosenSource"
+						},
+						{
+							"name": "AlterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          customer_cc_id as integer,",
+						"          customer_register as string,",
+						"          is_reliable_register as integer,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          golden_flag as string,",
+						"          register_type as integer,",
+						"          phone_number as string,",
+						"          customer_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceCC",
+						"source(output(",
+						"          id as integer,",
+						"          customer_master_id as integer,",
+						"          customer_master_id_prime as integer,",
+						"          customer_register as string,",
+						"          register_type as integer,",
+						"          golden_flag as string,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          phone_number as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          customer_created_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceMaster",
+						"sourceCC derive(customer_register = upper(trim(customer_register)),",
+						"          customer_name = trim(customer_name),",
+						"          full_address = trim(full_address),",
+						"          golden_flag = iif(isNull(golden_flag) || golden_flag == '', 'N', golden_flag),",
+						"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
+						"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0)) ~> deriveClean",
+						"deriveClean aggregate(groupBy(customer_register),",
+						"     id = first(id),",
+						"          is_reliable_register = max(is_reliable_register),",
+						"          phone_number = last(phone_number),",
+						"          register_type = max(register_type),",
+						"          full_address = last(full_address),",
+						"          customer_name = max(customer_name),",
+						"          golden_flag = last(golden_flag),",
+						"          customer_created_date = min(customer_created_date),",
+						"          created_at = max(created_at),",
+						"          updated_at = max(updated_at)) ~> aggregateDedup",
+						"sourceMaster aggregate(max_customer_master_id = max(customer_master_id)) ~> getMaxMasterId",
+						"aggregateDedup, sourceMaster join(aggregateDedup@customer_register == sourceMaster@customer_register,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> lookupExisting",
+						"select1 split(isNull(master_customer_register),",
+						"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
+						"addRowNumber, getMaxMasterId join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> crossJoinMaxId",
+						"crossJoinMaxId derive(customer_master_id = coalesce(max_customer_master_id, toLong(0)) + toLong(row_num),",
+						"          customer_master_id_prime = mod((12534191 * (coalesce(max_customer_master_id, toLong(0)) + toLong(row_num)) + 12534217), 100000000)) ~> generateMasterIds",
+						"generateMasterIds select(mapColumn(",
+						"          customer_master_id,",
+						"          customer_master_id_prime,",
+						"          customer_register,",
+						"          register_type,",
+						"          golden_flag,",
+						"          customer_name,",
+						"          full_address,",
+						"          phone_number,",
+						"          customer_created_date,",
+						"          created_at,",
+						"          updated_at",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectForInsert",
+						"splitRecords@existingRecords select(mapColumn(",
+						"          id,",
+						"          customer_master_id,",
+						"          customer_master_id_prime,",
+						"          customer_register,",
+						"          register_type,",
+						"          golden_flag,",
+						"          customer_name,",
+						"          full_address,",
+						"          phone_number,",
+						"          customer_created_date,",
+						"          created_at,",
+						"          updated_at",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
+						"splitRecords@newRecords window(asc(customer_register, true),",
+						"     row_num = rowNumber()) ~> addRowNumber",
+						"chosenSource select(mapColumn(",
+						"          id = sourceMaster@id,",
+						"          is_reliable_register,",
+						"          register_type = aggregateDedup@register_type,",
+						"          customer_master_id,",
+						"          customer_master_id_prime,",
+						"          phone_number = phone_number_new,",
+						"          full_address = full_address_new,",
+						"          golden_flag = golden_flag_new,",
+						"          customer_created_date = customer_created_date_new,",
+						"          master_customer_register = sourceMaster@customer_register,",
+						"          customer_register = aggregateDedup@customer_register,",
+						"          customer_name = customer_name_new,",
+						"          created_at,",
+						"          updated_at",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"lookupExisting derive(phone_number_new = iif(isNull(sourceMaster@phone_number) || length(aggregateDedup@phone_number)>length(sourceMaster@phone_number), aggregateDedup@phone_number,sourceMaster@phone_number),",
+						"          full_address_new = iif(isNull(sourceMaster@full_address) || length(aggregateDedup@full_address)>length(sourceMaster@full_address), aggregateDedup@full_address,sourceMaster@full_address),",
+						"          customer_name_new = iif(isNull(sourceMaster@customer_name) || length(aggregateDedup@customer_name)>length(sourceMaster@customer_name), aggregateDedup@customer_name,sourceMaster@customer_name),",
+						"          golden_flag_new = iif(isNull(sourceMaster@golden_flag) || length(aggregateDedup@golden_flag)>length(sourceMaster@golden_flag), aggregateDedup@golden_flag,sourceMaster@golden_flag),",
+						"          customer_created_date_new = iif(isNull(sourceMaster@customer_created_date) || aggregateDedup@customer_created_date<sourceMaster@customer_created_date, aggregateDedup@customer_created_date,sourceMaster@customer_created_date),",
+						"          created_at = iif(isNull(sourceMaster@created_at) || aggregateDedup@created_at<sourceMaster@created_at, aggregateDedup@created_at,sourceMaster@created_at),",
+						"          updated_at = iif(isNull(sourceMaster@updated_at) || aggregateDedup@updated_at>sourceMaster@updated_at, aggregateDedup@updated_at,sourceMaster@updated_at),",
+						"          customer_master_id = customer_master_id,",
+						"          customer_master_id_prime = customer_master_id_prime) ~> chosenSource",
+						"selectForUpdate alterRow(updateIf(true())) ~> AlterRow1",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkMaster",
+						"selectForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/cc_customer_to_master_test')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CC"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceCC"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "maxs"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          customer_cc_id as integer,",
+						"          customer_register as string,",
+						"          is_reliable_register as integer,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          golden_flag as string,",
+						"          register_type as integer,",
+						"          phone_number as string,",
+						"          customer_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceCC",
+						"sourceCC select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 aggregate(groupBy(customer_register),",
+						"     is_reliable_register = max(is_reliable_register),",
+						"          phone_number = max(phone_number),",
+						"          register_type = max(register_type),",
+						"          full_address = last(full_address),",
+						"          customer_name = min(customer_name),",
+						"          customer_created_date = min(customer_created_date),",
+						"          created_at = last(created_at),",
+						"          updated_at = last(updated_at),",
+						"          id = max(id)) ~> maxs",
+						"maxs sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
 					]
 				}
 			},
@@ -2896,171 +3307,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_SIGRADE')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_SIGRADE",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_SIGRADE",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"SIGRADE\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "SIGRADE.csv"
-									},
-									"sink1": {
-										"cwfolder": "SIGRADE"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_SILEVEL')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_SILEVEL",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_SILEVEL",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"SILEVEL\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "SILEVEL.csv"
-									},
-									"sink1": {
-										"cwfolder": "SILEVEL"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_TBLCOMPANY')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_TBLCOMPANY",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_TBLCOMPANY",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"TBLCOMPANY\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "TBLCOMPANY.csv"
-									},
-									"sink1": {
-										"cwfolder": "TBLCOMPANY"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:11Z"
 			},
 			"dependsOn": []
 		}
