@@ -1496,6 +1496,75 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_cc_master_customer')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "cc_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "cc_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "CC Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_evs_allemployee_UpsertTrigger')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1800,54 +1869,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-11-27T04:33:58Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "dwh_df_employee_history_copy1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dwh_df_employee_history_copy1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"employee": {
-										"tableName": "dim_employee",
-										"schema": "dwh_hr"
-									},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-23T03:23:20Z"
 			},
 			"dependsOn": []
 		}
