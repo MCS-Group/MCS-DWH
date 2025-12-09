@@ -21120,6 +21120,77 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ag_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ag_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/ag_customer_to_master')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ag_customer_to_master')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -21323,12 +21394,13 @@
 						"          full_address = trim(full_address),",
 						"          golden_flag = iif(isNull(golden_flag) , 'N', 'Y'),",
 						"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
-						"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0)) ~> deriveClean",
+						"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0),",
+						"          register_type = iif(register_type, 1, 0)) ~> deriveClean",
 						"deriveClean aggregate(groupBy(customer_register),",
 						"     id = first(id),",
 						"          is_reliable_register = max(is_reliable_register),",
 						"          phone_number_cc = last(phone_number),",
-						"          register_type = max(register_type),",
+						"          register_type = toInteger(max(register_type)),",
 						"          full_address_cc = last(full_address),",
 						"          customer_name_cc = max(customer_name),",
 						"          golden_flag = last(golden_flag),",
@@ -21407,7 +21479,7 @@
 						"          customer_master_id = customer_master_id_ms,",
 						"          customer_master_id_prime = customer_master_id_prime_ms,",
 						"          register_type = iif(!isNull(customer_register_ms) && length(customer_register_ms) == 7 && regexMatch(customer_register_ms, '^[0-9]{7}$'), 1,",
-						"    iif(!isNull(customer_register_ms) && length(customer_register_ms) == 10 && regexMatch(customer_register_ms, '^[A-Za-z]{2}[0-9]{8}$'), 0, toInteger(null())))) ~> chooseSource",
+						"    iif(!isNull(customer_register_ms) && length(customer_register_ms) == 10 && regexMatch(customer_register_ms, '^[A-Za-z]{2}[0-9]{8}$'), 0, toInteger(2)))) ~> chooseSource",
 						"aggregateDeduplicate select(mapColumn(",
 						"          customer_register_sc = customer_register,",
 						"          id_sc = id,",
@@ -21509,77 +21581,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ag_customer_to_master",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ag_customer_to_master",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"sourceCC": {
-										"cw_table": "ag_dwh_customer",
-										"cw_schema": "mch"
-									},
-									"sourceMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sourceMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									},
-									"sinkMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkInsertMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "AG Pipelines/Customer"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/ag_customer_to_master')]"
 			]
 		}
 	]
