@@ -20,6 +20,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "sourceMaster"
+				},
+				{
+					"dataset": {
+						"referenceName": "Dwh_Sql",
+						"type": "DatasetReference"
+					},
+					"name": "sourceMasterIds"
 				}
 			],
 			"sinks": [
@@ -36,6 +43,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "sinkInsertMaster"
+				},
+				{
+					"dataset": {
+						"referenceName": "Dwh_Sql",
+						"type": "DatasetReference"
+					},
+					"name": "sinkMasterIds"
 				}
 			],
 			"transformations": [
@@ -80,6 +94,24 @@
 				},
 				{
 					"name": "selectMaster"
+				},
+				{
+					"name": "selectExistMasterIds"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "select3"
 				}
 			],
 			"scriptLines": [
@@ -119,6 +151,19 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceMaster",
+				"source(output(",
+				"          id as integer,",
+				"          customer_master_id as integer,",
+				"          customer_cc_id as integer,",
+				"          customer_ag_id as integer,",
+				"          customer_td_id as integer,",
+				"          created_at as timestamp,",
+				"          updated_at as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourceMasterIds",
 				"sourceCC derive(customer_register = upper(\r",
 				"    replace(\r",
 				"        trim(customer_register),\r",
@@ -274,6 +319,40 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> selectMaster",
+				"sourceMasterIds select(mapColumn(",
+				"          customer_master_id_ms = customer_master_id,",
+				"          customer_cc_id_ms = customer_cc_id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectExistMasterIds",
+				"select3, selectExistMasterIds join(customer_cc_id_scs == customer_cc_id_ms,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 filter(isNull(customer_master_id_ms)) ~> filter1",
+				"filter1, selectForInsert join(customer_register_scs == customer_register,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"join2 select(mapColumn(",
+				"          customer_cc_id = customer_cc_id_scs,",
+				"          created_at = created_at_scs,",
+				"          updated_at = updated_at_scs,",
+				"          customer_master_id = customer_master_id_ms",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"deriveClean select(mapColumn(",
+				"          customer_cc_id_scs = customer_cc_id,",
+				"          customer_register_scs = customer_register,",
+				"          customer_created_date_scs = customer_created_date,",
+				"          created_at_scs = created_at,",
+				"          updated_at_scs = updated_at",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
 				"AlterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     deletable:false,",
@@ -294,7 +373,17 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster",
+				"select2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkMasterIds"
 			]
 		}
 	}
