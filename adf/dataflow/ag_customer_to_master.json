@@ -201,7 +201,7 @@
 				"          golden_flag = iif(isNull(golden_flag) , 'N', 'Y'),",
 				"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
 				"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0),",
-				"          register_type = toInteger(register_type)) ~> deriveClean",
+				"          register_type = iif(register_type, 1, 0)) ~> deriveClean",
 				"deriveClean aggregate(groupBy(customer_register),",
 				"     id = first(id),",
 				"          is_reliable_register = max(is_reliable_register),",
