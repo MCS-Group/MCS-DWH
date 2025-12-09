@@ -1138,7 +1138,7 @@
 						"          customer_cc_id = customer_cc_id_scs,",
 						"          created_at = created_at_scs,",
 						"          updated_at = updated_at_scs,",
-						"          customer_master_id = customer_master_id_ms",
+						"          customer_master_id",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> select2",
