@@ -1547,12 +1547,15 @@
 								"parameters": {},
 								"datasetParameters": {
 									"tradeshopAgInfoTable": {
-										"cw_table": "trade_shop_ag_info"
+										"cw_table": "trade_shop_ag_info",
+										"cw_schema": "mvs"
 									},
 									"updateAgCustomerInIdMaster": {
-										"cw_table": "id_master"
+										"cw_table": "id_master",
+										"cw_schema": "mvs"
 									}
-								}
+								},
+								"linkedServiceParameters": {}
 							},
 							"staging": {},
 							"compute": {
@@ -15249,7 +15252,7 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "tradeshopAgInfoTable"
@@ -15258,7 +15261,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "updateAgCustomerInIdMaster"
@@ -15284,7 +15287,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     query: 'Select \\n    customer_ag_id,\\n    customer_register,\\n    tradeshop_id_gps\\nfrom trade_shop_ag_info',",
+						"     query: 'SELECT\\n    customer_ag_id,\\n    customer_register,\\n    tradeshop_id_gps\\nFROM [mvs].[trade_shop_ag_info]',",
 						"     format: 'query') ~> tradeshopAgInfoTable",
 						"tradeshopAgInfoTable aggregate(groupBy(customer_register,",
 						"          tradeshop_id_gps),",
@@ -15306,12 +15309,13 @@
 						"     keys:['trade_shop_ag_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> updateAgCustomerInIdMaster"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> updateAgCustomerInIdMaster"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DataService_TestMerchant')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
