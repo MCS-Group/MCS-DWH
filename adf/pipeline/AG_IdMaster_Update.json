@@ -20,10 +20,12 @@
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"tradeshopAgInfoTable": {
-								"cw_table": "trade_shop_ag_info"
+								"cw_table": "trade_shop_ag_info",
+								"cw_schema": "mvs"
 							},
 							"updateAgCustomerInIdMaster": {
-								"cw_table": "id_master"
+								"cw_table": "id_master",
+								"cw_schema": "mvs"
 							}
 						}
 					},
