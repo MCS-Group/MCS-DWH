@@ -54,6 +54,82 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "CC_Customer_DWH_to_DataService",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "CC_Customer_DWH_to_DataService",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"ccDwhCustomerTable": {
+								"cw_table": "cc_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"addressFromDataServiceTable": {
+								"cw_table": "location",
+								"cw_schema": "mvs"
+							},
+							"saveToDataServiceDB": {
+								"cw_table": "customer_cc_info",
+								"cw_schema": "mvs"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CC_TradeShop_DWH_to_DataService",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "CC_TradeShop_DWH_to_DataService",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"ccDwhTradeShopTable": {
+								"cw_table": "cc_dwh_trade_shop",
+								"cw_schema": "mch"
+							},
+							"addressFromDataServiceTable": {
+								"cw_table": "location",
+								"cw_schema": "mvs"
+							},
+							"saveToMerchantDB": {
+								"cw_table": "trade_shop_cc_info",
+								"cw_schema": "mvs"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
 		"annotations": []
