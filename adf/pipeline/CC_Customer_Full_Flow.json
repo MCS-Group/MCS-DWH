@@ -246,7 +246,8 @@
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"ccDwhCustomerTable": {
-								"cw_table": "cc_dwh_customer"
+								"cw_table": "cc_dwh_customer",
+								"cw_schema": "mch"
 							},
 							"addressFromDataServiceTable": {
 								"cw_table": "location",
