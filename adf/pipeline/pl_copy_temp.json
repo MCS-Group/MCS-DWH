@@ -54,6 +54,44 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "AG_Customer_DWH_to_DataService_SQL",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "AG_Customer_DWH_to_DataService_SQL",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"agDwhCustomerTable": {
+								"cw_table": "ag_dwh_customer",
+								"cw_schema": "mch"
+							},
+							"addressFromDataServiceTable": {
+								"cw_table": "location",
+								"cw_schema": "mvs"
+							},
+							"saveToDataServiceDB": {
+								"cw_table": "customer_ag_info",
+								"cw_schema": "mvs"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
 		"annotations": []
