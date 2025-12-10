@@ -284,10 +284,12 @@
 								"cw_schema": "mch"
 							},
 							"addressFromDataServiceTable": {
-								"cw_table": "location"
+								"cw_table": "location",
+								"cw_schema": "mvs"
 							},
 							"saveToDataServiceDB": {
-								"cw_table": "customer_ag_info"
+								"cw_table": "customer_ag_info",
+								"cw_schema": "mvs"
 							}
 						}
 					},
