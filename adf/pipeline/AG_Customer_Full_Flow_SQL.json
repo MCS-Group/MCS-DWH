@@ -329,10 +329,16 @@
 								"cw_schema": "mch"
 							},
 							"addressFromDataServiceTable": {
-								"cw_table": "location"
-							},
-							"saveToDataServiceDB": {
-								"cw_table": "trade_shop_ag_info"
+								"cw_table": "location",
+								"cw_schema": "mvs"
+							}
+						},
+						"linkedServiceParameters": {
+							"addressFromDataServiceTable": {
+								"schemaLinkedService": {
+									"cw_table": "trade_shop_ag_info",
+									"cw_schema": "mvs"
+								}
 							}
 						}
 					},
