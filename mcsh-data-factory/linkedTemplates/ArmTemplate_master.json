@@ -1,0 +1,629 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "mcsh-data-factory"
+		},
+		"AzureMySql1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureMySql1'"
+		},
+		"AzureMySql_allEmployee_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureMySql_allEmployee'"
+		},
+		"Azure_DWH_Dynamic_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Azure_DWH_Dynamic'"
+		},
+		"Azure_DWH_HR_link_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Azure_DWH_HR_link'"
+		},
+		"Azure_DWH_Hr_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Azure_DWH_Hr'"
+		},
+		"Azure_MySql_DWH_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Azure_MySql_DWH'"
+		},
+		"GitHubMcsDWH_credential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'credential' of 'GitHubMcsDWH'"
+		},
+		"MCS_FMCG_DWH_MainDB_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MCS_FMCG_DWH_MainDB'"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MCS_FMCG_DWH_SqlServerConn'"
+		},
+		"MCS_HR_GreenERP_SC_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MCS_HR_GreenERP_SC'"
+		},
+		"MCS_HR_GreenERP_Source_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MCS_HR_GreenERP_Source'"
+		},
+		"Merchant_DataService_DB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Merchant_DataService_DB'"
+		},
+		"Oracle1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Oracle1'"
+		},
+		"linkedService1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'linkedService1'"
+		},
+		"ADLS_FMCS_RAW_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mcsholdingdw"
+		},
+		"AzureSqlDw_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDw_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mcsholdingdw"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "mcsholdingdwh.mysql.database.azure.com"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().database}"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "mcsholdingdwh"
+		},
+		"GitHubMcsDWH_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "lchuka1619@gmail.com"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "192.168.244.16"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "MAIN_DB"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "TumurOchir"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "192.168.244.16"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "QVReports"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "TumurOchir"
+		},
+		"MCS_HR_GreenERP_SC_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com:1521/ORCL"
+		},
+		"MCS_HR_GreenERP_SC_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "hrms_prod"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com:1521:ORCL"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "ORCL"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "V_BI_MCSG"
+		},
+		"Oracle1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com/orcl"
+		},
+		"Oracle1_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "hrms_prod"
+		},
+		"linkedService1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"linkedService_err_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://mcsdatalake.blob.core.windows.net/"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "td_dwh_sink"
+		},
+		"Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory": {
+			"type": "string",
+			"defaultValue": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table": {
+			"type": "string",
+			"defaultValue": "BigOneFullCustomers_D"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table": {
+			"type": "string",
+			"defaultValue": "TradeshopGPS_TD"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder": {
+			"type": "string",
+			"defaultValue": "td_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file": {
+			"type": "string",
+			"defaultValue": "td_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file": {
+			"type": "string",
+			"defaultValue": "td_dwh_full_trade_shop_gps.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table": {
+			"type": "string",
+			"defaultValue": "BigOneFullCustomers"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table": {
+			"type": "string",
+			"defaultValue": "TradeshopGPS_AG"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder": {
+			"type": "string",
+			"defaultValue": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file": {
+			"type": "string",
+			"defaultValue": "ag_dwh_full_trade_shop_gps.csv"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "utcNow()"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "addMinutes(utcNow(), 35)"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart": {
+			"type": "string",
+			"defaultValue": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd": {
+			"type": "string",
+			"defaultValue": "@trigger().scheduledTime"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "mcsh-data-factory_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureMySql1_connectionString": {
+						"value": "[parameters('AzureMySql1_connectionString')]"
+					},
+					"AzureMySql_allEmployee_connectionString": {
+						"value": "[parameters('AzureMySql_allEmployee_connectionString')]"
+					},
+					"Azure_DWH_Dynamic_password": {
+						"value": "[parameters('Azure_DWH_Dynamic_password')]"
+					},
+					"Azure_DWH_HR_link_connectionString": {
+						"value": "[parameters('Azure_DWH_HR_link_connectionString')]"
+					},
+					"Azure_DWH_Hr_connectionString": {
+						"value": "[parameters('Azure_DWH_Hr_connectionString')]"
+					},
+					"Azure_MySql_DWH_connectionString": {
+						"value": "[parameters('Azure_MySql_DWH_connectionString')]"
+					},
+					"GitHubMcsDWH_credential": {
+						"value": "[parameters('GitHubMcsDWH_credential')]"
+					},
+					"MCS_HR_GreenERP_Source_password": {
+						"value": "[parameters('MCS_HR_GreenERP_Source_password')]"
+					},
+					"Merchant_DataService_DB_connectionString": {
+						"value": "[parameters('Merchant_DataService_DB_connectionString')]"
+					},
+					"Oracle1_password": {
+						"value": "[parameters('Oracle1_password')]"
+					},
+					"linkedService1_accountKey": {
+						"value": "[parameters('linkedService1_accountKey')]"
+					},
+					"ADLS_FMCS_RAW_properties_typeProperties_url": {
+						"value": "[parameters('ADLS_FMCS_RAW_properties_typeProperties_url')]"
+					},
+					"AzureDataLakeStorage1_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+					},
+					"AzureSqlDatabase1_properties_typeProperties_server": {
+						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_server')]"
+					},
+					"AzureSqlDatabase1_properties_typeProperties_database": {
+						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]"
+					},
+					"AzureSqlDw_properties_typeProperties_server": {
+						"value": "[parameters('AzureSqlDw_properties_typeProperties_server')]"
+					},
+					"AzureSqlDw_properties_typeProperties_database": {
+						"value": "[parameters('AzureSqlDw_properties_typeProperties_database')]"
+					},
+					"Azure_DWH_Dynamic_properties_typeProperties_server": {
+						"value": "[parameters('Azure_DWH_Dynamic_properties_typeProperties_server')]"
+					},
+					"Azure_DWH_Dynamic_properties_typeProperties_database": {
+						"value": "[parameters('Azure_DWH_Dynamic_properties_typeProperties_database')]"
+					},
+					"Azure_DWH_Dynamic_properties_typeProperties_username": {
+						"value": "[parameters('Azure_DWH_Dynamic_properties_typeProperties_username')]"
+					},
+					"GitHubMcsDWH_properties_typeProperties_username": {
+						"value": "[parameters('GitHubMcsDWH_properties_typeProperties_username')]"
+					},
+					"MCS_HR_GreenERP_Source_properties_typeProperties_server": {
+						"value": "[parameters('MCS_HR_GreenERP_Source_properties_typeProperties_server')]"
+					},
+					"MCS_HR_GreenERP_Source_properties_typeProperties_database": {
+						"value": "[parameters('MCS_HR_GreenERP_Source_properties_typeProperties_database')]"
+					},
+					"MCS_HR_GreenERP_Source_properties_typeProperties_userName": {
+						"value": "[parameters('MCS_HR_GreenERP_Source_properties_typeProperties_userName')]"
+					},
+					"Oracle1_properties_typeProperties_server": {
+						"value": "[parameters('Oracle1_properties_typeProperties_server')]"
+					},
+					"Oracle1_properties_typeProperties_username": {
+						"value": "[parameters('Oracle1_properties_typeProperties_username')]"
+					},
+					"linkedService1_properties_typeProperties_url": {
+						"value": "[parameters('linkedService1_properties_typeProperties_url')]"
+					},
+					"linkedService_err_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('linkedService_err_properties_typeProperties_serviceEndpoint')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"MCS_FMCG_DWH_MainDB_password": {
+						"value": "[parameters('MCS_FMCG_DWH_MainDB_password')]"
+					},
+					"MCS_FMCG_DWH_SqlServerConn_password": {
+						"value": "[parameters('MCS_FMCG_DWH_SqlServerConn_password')]"
+					},
+					"MCS_HR_GreenERP_SC_password": {
+						"value": "[parameters('MCS_HR_GreenERP_SC_password')]"
+					},
+					"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
+						"value": "[parameters('MCS_FMCG_DWH_MainDB_properties_typeProperties_server')]"
+					},
+					"MCS_FMCG_DWH_MainDB_properties_typeProperties_database": {
+						"value": "[parameters('MCS_FMCG_DWH_MainDB_properties_typeProperties_database')]"
+					},
+					"MCS_FMCG_DWH_MainDB_properties_typeProperties_userName": {
+						"value": "[parameters('MCS_FMCG_DWH_MainDB_properties_typeProperties_userName')]"
+					},
+					"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_server": {
+						"value": "[parameters('MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_server')]"
+					},
+					"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_database": {
+						"value": "[parameters('MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_database')]"
+					},
+					"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_userName": {
+						"value": "[parameters('MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_userName')]"
+					},
+					"MCS_HR_GreenERP_SC_properties_typeProperties_server": {
+						"value": "[parameters('MCS_HR_GreenERP_SC_properties_typeProperties_server')]"
+					},
+					"MCS_HR_GreenERP_SC_properties_typeProperties_username": {
+						"value": "[parameters('MCS_HR_GreenERP_SC_properties_typeProperties_username')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_2')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_4",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_4.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_3')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_5",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_5.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_4')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_6",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_6.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_5')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_7",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_7.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_6')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_8",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_8.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+						"value": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart')]"
+					},
+					"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+						"value": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd')]"
+					},
+					"Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory": {
+						"value": "[parameters('Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory')]"
+					},
+					"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+						"value": "[parameters('Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart')]"
+					},
+					"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+						"value": "[parameters('Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd')]"
+					},
+					"Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory": {
+						"value": "[parameters('Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory')]"
+					},
+					"Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory": {
+						"value": "[parameters('Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory')]"
+					},
+					"Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory": {
+						"value": "[parameters('Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory')]"
+					},
+					"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table": {
+						"value": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table')]"
+					},
+					"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table": {
+						"value": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table')]"
+					},
+					"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder": {
+						"value": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder')]"
+					},
+					"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file": {
+						"value": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file')]"
+					},
+					"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file": {
+						"value": "[parameters('Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file')]"
+					},
+					"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table": {
+						"value": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table')]"
+					},
+					"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table": {
+						"value": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table')]"
+					},
+					"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder": {
+						"value": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder')]"
+					},
+					"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file": {
+						"value": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file')]"
+					},
+					"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file": {
+						"value": "[parameters('Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file')]"
+					},
+					"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
+						"value": "[parameters('NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart')]"
+					},
+					"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd": {
+						"value": "[parameters('NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd')]"
+					},
+					"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart": {
+						"value": "[parameters('Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart')]"
+					},
+					"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd": {
+						"value": "[parameters('Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_7')]"
+			]
+		}
+	]
+}

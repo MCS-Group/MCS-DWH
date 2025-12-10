@@ -1,0 +1,192 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "mcsh-data-factory"
+		},
+		"AzureMySql1_connectionString": {
+			"value": ""
+		},
+		"AzureMySql_allEmployee_connectionString": {
+			"value": ""
+		},
+		"Azure_DWH_Dynamic_password": {
+			"value": ""
+		},
+		"Azure_DWH_HR_link_connectionString": {
+			"value": ""
+		},
+		"Azure_DWH_Hr_connectionString": {
+			"value": ""
+		},
+		"Azure_MySql_DWH_connectionString": {
+			"value": ""
+		},
+		"GitHubMcsDWH_credential": {
+			"value": ""
+		},
+		"MCS_FMCG_DWH_MainDB_password": {
+			"value": ""
+		},
+		"MCS_FMCG_DWH_SqlServerConn_password": {
+			"value": ""
+		},
+		"MCS_HR_GreenERP_SC_password": {
+			"value": ""
+		},
+		"MCS_HR_GreenERP_Source_password": {
+			"value": ""
+		},
+		"Merchant_DataService_DB_connectionString": {
+			"value": ""
+		},
+		"Oracle1_password": {
+			"value": ""
+		},
+		"linkedService1_accountKey": {
+			"value": ""
+		},
+		"ADLS_FMCS_RAW_properties_typeProperties_url": {
+			"value": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"value": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"value": "mcsholdingdw"
+		},
+		"AzureSqlDw_properties_typeProperties_server": {
+			"value": "datawerehouseserver.database.windows.net"
+		},
+		"AzureSqlDw_properties_typeProperties_database": {
+			"value": "mcsholdingdw"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_server": {
+			"value": "mcsholdingdwh.mysql.database.azure.com"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_database": {
+			"value": "@{linkedService().database}"
+		},
+		"Azure_DWH_Dynamic_properties_typeProperties_username": {
+			"value": "mcsholdingdwh"
+		},
+		"GitHubMcsDWH_properties_typeProperties_username": {
+			"value": "lchuka1619@gmail.com"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
+			"value": "192.168.244.16"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_database": {
+			"value": "MAIN_DB"
+		},
+		"MCS_FMCG_DWH_MainDB_properties_typeProperties_userName": {
+			"value": "TumurOchir"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_server": {
+			"value": "192.168.244.16"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_database": {
+			"value": "QVReports"
+		},
+		"MCS_FMCG_DWH_SqlServerConn_properties_typeProperties_userName": {
+			"value": "TumurOchir"
+		},
+		"MCS_HR_GreenERP_SC_properties_typeProperties_server": {
+			"value": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com:1521/ORCL"
+		},
+		"MCS_HR_GreenERP_SC_properties_typeProperties_username": {
+			"value": "hrms_prod"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_server": {
+			"value": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com:1521:ORCL"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_database": {
+			"value": "ORCL"
+		},
+		"MCS_HR_GreenERP_Source_properties_typeProperties_userName": {
+			"value": "V_BI_MCSG"
+		},
+		"Oracle1_properties_typeProperties_server": {
+			"value": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com/orcl"
+		},
+		"Oracle1_properties_typeProperties_username": {
+			"value": "hrms_prod"
+		},
+		"linkedService1_properties_typeProperties_url": {
+			"value": "https://mcsdatalake.dfs.core.windows.net/"
+		},
+		"linkedService_err_properties_typeProperties_serviceEndpoint": {
+			"value": "https://mcsdatalake.blob.core.windows.net/"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"value": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"value": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory": {
+			"value": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowStart": {
+			"value": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Daily Morning_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
+			"value": "@trigger().scheduledTime"
+		},
+		"Daily Morning_properties_CC_MainDB_to_Raw_parameters_main_directory": {
+			"value": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_MainDB_to_Raw_parameters_main_directory": {
+			"value": "td_dwh_sink"
+		},
+		"Daily Morning_properties_CC_Small_Tables_Full_Extract_parameters_main_directory": {
+			"value": "cc_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_customer_table": {
+			"value": "BigOneFullCustomers_D"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_src_tradeshop_gps_table": {
+			"value": "TradeshopGPS_TD"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_folder": {
+			"value": "td_dwh_sink"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_customer_file": {
+			"value": "td_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_TD_Customer_Full_Flow_parameters_dest_gps_file": {
+			"value": "td_dwh_full_trade_shop_gps.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_customer_table": {
+			"value": "BigOneFullCustomers"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_src_tradeshop_gps_table": {
+			"value": "TradeshopGPS_AG"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_folder": {
+			"value": "ag_dwh_sink"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_customer_file": {
+			"value": "ag_dwh_full_customer.csv"
+		},
+		"Daily Morning_properties_AG_Customer_Full_Flow_SQL_parameters_dest_gps_file": {
+			"value": "ag_dwh_full_trade_shop_gps.csv"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowStart": {
+			"value": "utcNow()"
+		},
+		"NightTrigger_properties_pl_evs_allemployee_UpsertTrigger_parameters_windowEnd": {
+			"value": "addMinutes(utcNow(), 35)"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowStart": {
+			"value": "@{addhours(trigger().scheduledTime, -24)}"
+		},
+		"Trigger_qd9_properties_GreenERP_HREmployee_parameters_windowEnd": {
+			"value": "@trigger().scheduledTime"
+		}
+	}
+}
