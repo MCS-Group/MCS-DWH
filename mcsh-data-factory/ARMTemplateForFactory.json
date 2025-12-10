@@ -1462,12 +1462,15 @@
 										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "trade_shop_ag_info"
+										"cw_table": "trade_shop_ag_info",
+										"cw_schema": "mvs"
 									}
-								}
+								},
+								"linkedServiceParameters": {}
 							},
 							"staging": {},
 							"compute": {
@@ -8114,6 +8117,46 @@
 								}
 							}
 						]
+					},
+					{
+						"name": "AG_TradeShop_DWH_to_DataService_SQL",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_TradeShop_DWH_to_DataService_SQL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhTradeShopTable": {
+										"cw_table": "ag_dwh_trade_shop",
+										"cw_schema": "mch"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location",
+										"cw_schema": "mvs"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "trade_shop_ag_info",
+										"cw_schema": "mvs"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
 					}
 				],
 				"policy": {
@@ -8123,7 +8166,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DWH_Mysql')]",
-				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]",
+				"[concat(variables('factoryId'), '/dataflows/AG_TradeShop_DWH_to_DataService_SQL')]"
 			]
 		},
 		{
@@ -15523,7 +15567,7 @@
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -15532,7 +15576,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToDataServiceDB"
@@ -15727,13 +15771,13 @@
 						"     keys:['trade_shop_ag_id','tradeshop_id_gps'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]",
-				"[concat(variables('factoryId'), '/datasets/DataService_TestMerchant')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
