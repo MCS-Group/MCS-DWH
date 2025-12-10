@@ -294,10 +294,12 @@
 								"cw_table": "cc_dwh_trade_shop"
 							},
 							"addressFromDataServiceTable": {
-								"cw_table": "location"
+								"cw_table": "location",
+								"cw_schema": "mvs"
 							},
 							"saveToMerchantDB": {
-								"cw_table": "trade_shop_cc_info"
+								"cw_table": "trade_shop_cc_info",
+								"cw_schema": "mvs"
 							}
 						}
 					},
