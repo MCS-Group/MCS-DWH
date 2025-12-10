@@ -16,7 +16,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "addressFromDataServiceTable"
@@ -25,7 +25,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "saveToDataServiceDB"
@@ -220,7 +220,8 @@
 				"     keys:['trade_shop_ag_id','tradeshop_id_gps'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 			]
 		}
 	}
