@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "tradeshopAgInfoTable"
@@ -18,7 +18,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "updateAgCustomerInIdMaster"
@@ -66,7 +66,8 @@
 				"     keys:['trade_shop_ag_id'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> updateAgCustomerInIdMaster"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> updateAgCustomerInIdMaster"
 			]
 		}
 	}
