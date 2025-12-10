@@ -16,7 +16,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "addressFromDataServiceTable"
@@ -25,7 +25,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DataService_TestMerchant",
+						"referenceName": "Dwh_Sql",
 						"type": "DatasetReference"
 					},
 					"name": "saveToMerchantDB"
@@ -104,15 +104,7 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> ccDwhTradeShopTable",
-				"source(output(",
-				"          id as integer,",
-				"          loc_name as string,",
-				"          full_address as string,",
-				"          lvl as integer,",
-				"          eb_id as string,",
-				"          parent_id as integer",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> addressFromDataServiceTable",
@@ -225,7 +217,8 @@
 				"     keys:['trade_shop_cc_id'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> saveToMerchantDB"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> saveToMerchantDB"
 			]
 		}
 	}
