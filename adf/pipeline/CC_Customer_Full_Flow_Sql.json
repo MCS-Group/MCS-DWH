@@ -291,7 +291,8 @@
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"ccDwhTradeShopTable": {
-								"cw_table": "cc_dwh_trade_shop"
+								"cw_table": "cc_dwh_trade_shop",
+								"cw_schema": "mch"
 							},
 							"addressFromDataServiceTable": {
 								"cw_table": "location",
