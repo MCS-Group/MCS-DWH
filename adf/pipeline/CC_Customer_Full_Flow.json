@@ -249,10 +249,12 @@
 								"cw_table": "cc_dwh_customer"
 							},
 							"addressFromDataServiceTable": {
-								"cw_table": "location"
+								"cw_table": "location",
+								"cw_schema": "mvs"
 							},
 							"saveToDataServiceDB": {
-								"cw_table": "customer_cc_info"
+								"cw_table": "customer_cc_info",
+								"cw_schema": "mvs"
 							}
 						}
 					},
