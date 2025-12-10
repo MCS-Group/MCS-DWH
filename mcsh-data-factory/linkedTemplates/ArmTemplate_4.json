@@ -32,7 +32,7 @@
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -41,7 +41,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToDataServiceDB"
@@ -198,7 +198,8 @@
 						"            ), 'УБ ХУД', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
 						"        ), 'УБ БЗД', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
 						"    ), 'УБ БГД', 'Улаанбаатар, Баянгол дүүрэг,'\r",
-						")) ~> addressFixDistrictCityAbbr1",
+						"),",
+						"          register_type = iif(register_type == true(), 1, 0)) ~> addressFixDistrictCityAbbr1",
 						"addressFixDistrictCityAbbr1 derive(fixed_address = replace(\r",
 						"    replace(\r",
 						"        replace(\r",
@@ -222,7 +223,8 @@
 						"     keys:['customer_register','customer_ag_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 					]
 				}
 			},
@@ -1222,14 +1224,14 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "DWH_Mysql",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "ccDwhCustomerTable"
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -1238,7 +1240,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToDataServiceDB"
@@ -1423,7 +1425,8 @@
 						"     keys:['customer_register','customer_cc_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 					]
 				}
 			},
@@ -1944,14 +1947,14 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "DWH_Mysql",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "ccDwhTradeShopTable"
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -1960,7 +1963,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToMerchantDB"
@@ -2160,7 +2163,8 @@
 						"     keys:['trade_shop_cc_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToMerchantDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToMerchantDB"
 					]
 				}
 			},

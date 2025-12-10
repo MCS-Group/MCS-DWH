@@ -1415,10 +1415,12 @@
 										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_ag_info"
+										"cw_table": "customer_ag_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2393,13 +2395,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhCustomerTable": {
-										"cw_table": "cc_dwh_customer"
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_cc_info"
+										"cw_table": "customer_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2437,13 +2442,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhTradeShopTable": {
-										"cw_table": "cc_dwh_trade_shop"
+										"cw_table": "cc_dwh_trade_shop",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToMerchantDB": {
-										"cw_table": "trade_shop_cc_info"
+										"cw_table": "trade_shop_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2795,13 +2803,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhCustomerTable": {
-										"cw_table": "cc_dwh_customer"
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_cc_info"
+										"cw_table": "customer_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2839,13 +2850,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhTradeShopTable": {
-										"cw_table": "cc_dwh_trade_shop"
+										"cw_table": "cc_dwh_trade_shop",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToMerchantDB": {
-										"cw_table": "trade_shop_cc_info"
+										"cw_table": "trade_shop_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -7898,6 +7912,77 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/EmployeeProfile_deletes')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ag_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ag_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/ag_customer_to_master')]"
 			]
 		},
 		{
@@ -14453,7 +14538,7 @@
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -14462,7 +14547,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToDataServiceDB"
@@ -14619,7 +14704,8 @@
 						"            ), 'УБ ХУД', 'Улаанбаатар, Хан-Уул дүүрэг,'\r",
 						"        ), 'УБ БЗД', 'Улаанбаатар, Баянзүрх дүүрэг,'\r",
 						"    ), 'УБ БГД', 'Улаанбаатар, Баянгол дүүрэг,'\r",
-						")) ~> addressFixDistrictCityAbbr1",
+						"),",
+						"          register_type = iif(register_type == true(), 1, 0)) ~> addressFixDistrictCityAbbr1",
 						"addressFixDistrictCityAbbr1 derive(fixed_address = replace(\r",
 						"    replace(\r",
 						"        replace(\r",
@@ -14643,13 +14729,13 @@
 						"     keys:['customer_register','customer_ag_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]",
-				"[concat(variables('factoryId'), '/datasets/DataService_TestMerchant')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
@@ -15663,14 +15749,14 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "DWH_Mysql",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "ccDwhCustomerTable"
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -15679,7 +15765,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToDataServiceDB"
@@ -15864,13 +15950,13 @@
 						"     keys:['customer_register','customer_cc_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToDataServiceDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToDataServiceDB"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DWH_Mysql')]",
-				"[concat(variables('factoryId'), '/datasets/DataService_TestMerchant')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
@@ -16397,14 +16483,14 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "DWH_Mysql",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "ccDwhTradeShopTable"
 						},
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "addressFromDataServiceTable"
@@ -16413,7 +16499,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DataService_TestMerchant",
+								"referenceName": "Dwh_Sql",
 								"type": "DatasetReference"
 							},
 							"name": "saveToMerchantDB"
@@ -16613,13 +16699,13 @@
 						"     keys:['trade_shop_cc_id'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> saveToMerchantDB"
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> saveToMerchantDB"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DWH_Mysql')]",
-				"[concat(variables('factoryId'), '/datasets/DataService_TestMerchant')]"
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
@@ -18580,6 +18666,399 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ADLS_Raw_CSV')]",
 				"[concat(variables('factoryId'), '/datasets/ADLS_Filtered_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ag_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "AG"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceCC"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceMaster"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sourceMasterIds"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sinkMaster"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sinkInsertMaster"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference"
+							},
+							"name": "sinkMasterIds"
+						}
+					],
+					"transformations": [
+						{
+							"name": "deriveClean"
+						},
+						{
+							"name": "aggregateDeduplicate"
+						},
+						{
+							"name": "getMaxMasterId"
+						},
+						{
+							"name": "lookupExisting"
+						},
+						{
+							"name": "splitRecords"
+						},
+						{
+							"name": "crossJoinMaxId"
+						},
+						{
+							"name": "generateMasterIds"
+						},
+						{
+							"name": "selectForInsert"
+						},
+						{
+							"name": "selectForUpdate"
+						},
+						{
+							"name": "addRowNumber"
+						},
+						{
+							"name": "AlterRow1"
+						},
+						{
+							"name": "chooseSource"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "selectMaster"
+						},
+						{
+							"name": "selectExistMasterIds"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "join2"
+						},
+						{
+							"name": "select2"
+						},
+						{
+							"name": "select3"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          customer_ag_id as integer,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          golden_flag as boolean,",
+						"          customer_register as string,",
+						"          register_type as boolean,",
+						"          phone_number as string,",
+						"          customer_created_date as timestamp,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          is_reliable_register as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceCC",
+						"source(output(",
+						"          id as integer,",
+						"          customer_master_id as integer,",
+						"          customer_master_id_prime as integer,",
+						"          customer_register as string,",
+						"          register_type as integer,",
+						"          golden_flag as string,",
+						"          customer_name as string,",
+						"          full_address as string,",
+						"          phone_number as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          customer_created_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceMaster",
+						"source(output(",
+						"          id as integer,",
+						"          customer_master_id as integer,",
+						"          customer_cc_id as integer,",
+						"          customer_ag_id as integer,",
+						"          customer_td_id as integer,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceMasterIds",
+						"sourceCC derive(customer_register = upper(\r",
+						"    replace(\r",
+						"        trim(customer_register),\r",
+						"        ' ',\r",
+						"        ''\r",
+						"    )\r",
+						"),",
+						"          customer_name = iif(\r",
+						"    /* CASE 1: Starts with 5+ digits */\r",
+						"    regexMatch(trim(customer_name), '^[0-9]{5,}.*'),\r",
+						"    trim(\r",
+						"        regexReplace(\r",
+						"            trim(customer_name),\r",
+						"            '^[0-9]+[^0-9]?',\r",
+						"            ''\r",
+						"        )\r",
+						"    ),\r",
+						"\r",
+						"    /* ELSE CASE 2: Ends with 5+ digits */\r",
+						"    iif(\r",
+						"        regexMatch(trim(customer_name), '.*[0-9]{5,}$'),\r",
+						"        trim(\r",
+						"            regexReplace(\r",
+						"                trim(customer_name),\r",
+						"                '[^0-9]?[0-9]+$',\r",
+						"                ''\r",
+						"            )\r",
+						"        ),\r",
+						"\r",
+						"        /* ELSE: leave as is */\r",
+						"        trim(customer_name)\r",
+						"    )\r",
+						"),",
+						"          full_address = trim(full_address),",
+						"          golden_flag = iif(isNull(golden_flag) , 'N', 'Y'),",
+						"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
+						"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0),",
+						"          register_type = iif(register_type, 1, 0)) ~> deriveClean",
+						"deriveClean aggregate(groupBy(customer_register),",
+						"     id = first(id),",
+						"          is_reliable_register = max(is_reliable_register),",
+						"          phone_number_cc = last(phone_number),",
+						"          register_type = toInteger(max(register_type)),",
+						"          full_address_cc = last(full_address),",
+						"          customer_name_cc = max(customer_name),",
+						"          golden_flag = last(golden_flag),",
+						"          golden_flag_cc = last(golden_flag),",
+						"          customer_created_date = min(customer_created_date),",
+						"          created_at = max(created_at),",
+						"          updated_at = max(updated_at)) ~> aggregateDeduplicate",
+						"selectMaster aggregate(max_customer_master_id = max(customer_master_id_ms)) ~> getMaxMasterId",
+						"select1, selectMaster join(customer_register_sc == customer_register_ms,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> lookupExisting",
+						"lookupExisting split(isNull(customer_register_ms),",
+						"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
+						"addRowNumber, getMaxMasterId join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> crossJoinMaxId",
+						"crossJoinMaxId derive(customer_master_id_created = coalesce(max_customer_master_id, toLong(0)) + toLong(row_num),",
+						"          customer_master_id_prime_created = mod((12534191 * (coalesce(max_customer_master_id, toLong(0)) + toLong(row_num)) + 12534217), 100000000)) ~> generateMasterIds",
+						"generateMasterIds select(mapColumn(",
+						"          customer_master_id = customer_master_id_created,",
+						"          customer_master_id_prime = customer_master_id_prime_created,",
+						"          customer_register = customer_register_sc,",
+						"          register_type = register_type_sc,",
+						"          golden_flag = golden_flag_sc,",
+						"          customer_name = customer_name_sc,",
+						"          full_address = full_address_sc,",
+						"          phone_number = phone_number_sc,",
+						"          phone_number_flag = phone_number_sc,",
+						"          customer_created_date = customer_created_date_sc,",
+						"          created_at = created_at_sc,",
+						"          updated_at = updated_at_sc,",
+						"          is_reliable_register = is_reliable_register_sc",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectForInsert",
+						"chooseSource select(mapColumn(",
+						"          id = id_ms,",
+						"          customer_master_id,",
+						"          customer_master_id_prime,",
+						"          customer_register = customer_register_ms,",
+						"          register_type = register_type_ms,",
+						"          golden_flag = golden_flag_final,",
+						"          customer_name = customer_name_final,",
+						"          full_address = full_address_final,",
+						"          phone_number = phone_number_final,",
+						"          phone_number_flag = phone_number_final,",
+						"          customer_created_date = customer_created_date_final,",
+						"          created_at = created_at_final,",
+						"          updated_at = updated_at_final",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
+						"splitRecords@newRecords window(asc(customer_register_sc, true),",
+						"     row_num = rowNumber()) ~> addRowNumber",
+						"selectForUpdate alterRow(updateIf(true())) ~> AlterRow1",
+						"splitRecords@existingRecords derive(phone_number_final = iif(\r",
+						"    isNull(phone_number_ms) ||\r",
+						"    length(regexReplace(toString(phone_number_ms), '[^0-9]', '')) != 8 ||\r",
+						"    not(regexMatch(regexReplace(toString(phone_number_ms), '[^0-9]', ''), '^[0-9]{8}$')) ||\r",
+						"    in(['00000000','11111111','22222222','33333333','44444444',\r",
+						"         '55555555','66666666','77777777','88888888','99999999'],regexReplace(toString(phone_number_ms), '[^0-9]', '')\r",
+						"    ),\r",
+						"    phone_number_sc,\r",
+						"    phone_number_ms\r",
+						"),",
+						"          full_address_final = iif(isNull(full_address_ms) || toString(full_address_ms) == '' || length(full_address_ms)<length(full_address_sc), full_address_sc, full_address_ms),",
+						"          customer_name_final = iif(isNull(customer_name_ms) || toString(customer_name_ms) == '' || length(customer_name_ms)<length(customer_name_sc), customer_name_sc, customer_name_ms),",
+						"          golden_flag_final = iif(isNull(golden_flag_ms) || toString(golden_flag_ms) == '' , golden_flag_sc, golden_flag_ms),",
+						"          customer_created_date_final = iif(isNull(customer_created_date_ms) || customer_created_date_sc<customer_created_date_ms, customer_created_date_sc,customer_created_date_ms),",
+						"          created_at_final = iif(isNull(created_at_ms) || created_at_ms<created_at_sc, created_at_sc,created_at_ms),",
+						"          updated_at_final = iif(isNull(updated_at_ms) || updated_at_sc>updated_at_ms, updated_at_sc,updated_at_ms),",
+						"          customer_master_id = customer_master_id_ms,",
+						"          customer_master_id_prime = customer_master_id_prime_ms,",
+						"          register_type = iif(!isNull(customer_register_ms) && length(customer_register_ms) == 7 && regexMatch(customer_register_ms, '^[0-9]{7}$'), 1,",
+						"    iif(!isNull(customer_register_ms) && length(customer_register_ms) == 10 && regexMatch(customer_register_ms, '^[A-Za-z]{2}[0-9]{8}$'), 0, toInteger(2)))) ~> chooseSource",
+						"aggregateDeduplicate select(mapColumn(",
+						"          customer_register_sc = customer_register,",
+						"          id_sc = id,",
+						"          is_reliable_register_sc = is_reliable_register,",
+						"          phone_number_sc = phone_number_cc,",
+						"          register_type_sc = register_type,",
+						"          full_address_sc = full_address_cc,",
+						"          customer_name_sc = customer_name_cc,",
+						"          golden_flag_sc = golden_flag_cc,",
+						"          customer_created_date_sc = customer_created_date,",
+						"          created_at_sc = created_at,",
+						"          updated_at_sc = updated_at",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"sourceMaster select(mapColumn(",
+						"          id_ms = id,",
+						"          customer_master_id_ms = customer_master_id,",
+						"          customer_master_id_prime_ms = customer_master_id_prime,",
+						"          customer_register_ms = customer_register,",
+						"          register_type_ms = register_type,",
+						"          golden_flag_ms = golden_flag,",
+						"          customer_name_ms = customer_name,",
+						"          full_address_ms = full_address,",
+						"          phone_number_ms = phone_number,",
+						"          created_at_ms = created_at,",
+						"          updated_at_ms = updated_at,",
+						"          customer_created_date_ms = customer_created_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectMaster",
+						"sourceMasterIds select(mapColumn(",
+						"          customer_master_id_ms = customer_master_id,",
+						"          customer_ag_id_ms = customer_ag_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectExistMasterIds",
+						"select3, selectExistMasterIds join(customer_ag_id_scs == customer_ag_id_ms,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 filter(isNull(customer_master_id_ms)) ~> filter1",
+						"filter1, selectForInsert join(customer_register_scs == customer_register,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join2",
+						"join2 select(mapColumn(",
+						"          customer_ag_id = customer_ag_id_scs,",
+						"          created_at = created_at_scs,",
+						"          updated_at = updated_at_scs,",
+						"          customer_master_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"deriveClean select(mapColumn(",
+						"          customer_ag_id_scs = customer_ag_id,",
+						"          customer_register_scs = customer_register,",
+						"          customer_created_date_scs = customer_created_date,",
+						"          created_at_scs = created_at,",
+						"          updated_at_scs = updated_at",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select3",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkMaster",
+						"selectForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster",
+						"select2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkMasterIds"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
 			]
 		},
 		{
@@ -21118,470 +21597,6 @@
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ag_customer_to_master",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ag_customer_to_master",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"sourceCC": {
-										"cw_table": "ag_dwh_customer",
-										"cw_schema": "mch"
-									},
-									"sourceMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sourceMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									},
-									"sinkMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkInsertMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "AG Pipelines/Customer"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/ag_customer_to_master')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ag_customer_to_master')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "AG"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sourceCC"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sourceMaster"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sourceMasterIds"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sinkMaster"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sinkInsertMaster"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference"
-							},
-							"name": "sinkMasterIds"
-						}
-					],
-					"transformations": [
-						{
-							"name": "deriveClean"
-						},
-						{
-							"name": "aggregateDeduplicate"
-						},
-						{
-							"name": "getMaxMasterId"
-						},
-						{
-							"name": "lookupExisting"
-						},
-						{
-							"name": "splitRecords"
-						},
-						{
-							"name": "crossJoinMaxId"
-						},
-						{
-							"name": "generateMasterIds"
-						},
-						{
-							"name": "selectForInsert"
-						},
-						{
-							"name": "selectForUpdate"
-						},
-						{
-							"name": "addRowNumber"
-						},
-						{
-							"name": "AlterRow1"
-						},
-						{
-							"name": "chooseSource"
-						},
-						{
-							"name": "select1"
-						},
-						{
-							"name": "selectMaster"
-						},
-						{
-							"name": "selectExistMasterIds"
-						},
-						{
-							"name": "join1"
-						},
-						{
-							"name": "filter1"
-						},
-						{
-							"name": "join2"
-						},
-						{
-							"name": "select2"
-						},
-						{
-							"name": "select3"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          id as integer,",
-						"          customer_ag_id as integer,",
-						"          customer_name as string,",
-						"          full_address as string,",
-						"          golden_flag as boolean,",
-						"          customer_register as string,",
-						"          register_type as boolean,",
-						"          phone_number as string,",
-						"          customer_created_date as timestamp,",
-						"          created_at as timestamp,",
-						"          updated_at as timestamp,",
-						"          is_reliable_register as boolean",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> sourceCC",
-						"source(output(",
-						"          id as integer,",
-						"          customer_master_id as integer,",
-						"          customer_master_id_prime as integer,",
-						"          customer_register as string,",
-						"          register_type as integer,",
-						"          golden_flag as string,",
-						"          customer_name as string,",
-						"          full_address as string,",
-						"          phone_number as string,",
-						"          created_at as timestamp,",
-						"          updated_at as timestamp,",
-						"          customer_created_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> sourceMaster",
-						"source(output(",
-						"          id as integer,",
-						"          customer_master_id as integer,",
-						"          customer_cc_id as integer,",
-						"          customer_ag_id as integer,",
-						"          customer_td_id as integer,",
-						"          created_at as timestamp,",
-						"          updated_at as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> sourceMasterIds",
-						"sourceCC derive(customer_register = upper(\r",
-						"    replace(\r",
-						"        trim(customer_register),\r",
-						"        ' ',\r",
-						"        ''\r",
-						"    )\r",
-						"),",
-						"          customer_name = iif(\r",
-						"    /* CASE 1: Starts with 5+ digits */\r",
-						"    regexMatch(trim(customer_name), '^[0-9]{5,}.*'),\r",
-						"    trim(\r",
-						"        regexReplace(\r",
-						"            trim(customer_name),\r",
-						"            '^[0-9]+[^0-9]?',\r",
-						"            ''\r",
-						"        )\r",
-						"    ),\r",
-						"\r",
-						"    /* ELSE CASE 2: Ends with 5+ digits */\r",
-						"    iif(\r",
-						"        regexMatch(trim(customer_name), '.*[0-9]{5,}$'),\r",
-						"        trim(\r",
-						"            regexReplace(\r",
-						"                trim(customer_name),\r",
-						"                '[^0-9]?[0-9]+$',\r",
-						"                ''\r",
-						"            )\r",
-						"        ),\r",
-						"\r",
-						"        /* ELSE: leave as is */\r",
-						"        trim(customer_name)\r",
-						"    )\r",
-						"),",
-						"          full_address = trim(full_address),",
-						"          golden_flag = iif(isNull(golden_flag) , 'N', 'Y'),",
-						"          phone_number = regexReplace(phone_number, '[^0-9]', ''),",
-						"          phone_flag = iif(length(regexReplace(phone_number, '[^0-9]', '')) == 8, 1, 0),",
-						"          register_type = iif(register_type, 1, 0)) ~> deriveClean",
-						"deriveClean aggregate(groupBy(customer_register),",
-						"     id = first(id),",
-						"          is_reliable_register = max(is_reliable_register),",
-						"          phone_number_cc = last(phone_number),",
-						"          register_type = toInteger(max(register_type)),",
-						"          full_address_cc = last(full_address),",
-						"          customer_name_cc = max(customer_name),",
-						"          golden_flag = last(golden_flag),",
-						"          golden_flag_cc = last(golden_flag),",
-						"          customer_created_date = min(customer_created_date),",
-						"          created_at = max(created_at),",
-						"          updated_at = max(updated_at)) ~> aggregateDeduplicate",
-						"selectMaster aggregate(max_customer_master_id = max(customer_master_id_ms)) ~> getMaxMasterId",
-						"select1, selectMaster join(customer_register_sc == customer_register_ms,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> lookupExisting",
-						"lookupExisting split(isNull(customer_register_ms),",
-						"     disjoint: false) ~> splitRecords@(newRecords, existingRecords)",
-						"addRowNumber, getMaxMasterId join(true(),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'right')~> crossJoinMaxId",
-						"crossJoinMaxId derive(customer_master_id_created = coalesce(max_customer_master_id, toLong(0)) + toLong(row_num),",
-						"          customer_master_id_prime_created = mod((12534191 * (coalesce(max_customer_master_id, toLong(0)) + toLong(row_num)) + 12534217), 100000000)) ~> generateMasterIds",
-						"generateMasterIds select(mapColumn(",
-						"          customer_master_id = customer_master_id_created,",
-						"          customer_master_id_prime = customer_master_id_prime_created,",
-						"          customer_register = customer_register_sc,",
-						"          register_type = register_type_sc,",
-						"          golden_flag = golden_flag_sc,",
-						"          customer_name = customer_name_sc,",
-						"          full_address = full_address_sc,",
-						"          phone_number = phone_number_sc,",
-						"          phone_number_flag = phone_number_sc,",
-						"          customer_created_date = customer_created_date_sc,",
-						"          created_at = created_at_sc,",
-						"          updated_at = updated_at_sc,",
-						"          is_reliable_register = is_reliable_register_sc",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectForInsert",
-						"chooseSource select(mapColumn(",
-						"          id = id_ms,",
-						"          customer_master_id,",
-						"          customer_master_id_prime,",
-						"          customer_register = customer_register_ms,",
-						"          register_type = register_type_ms,",
-						"          golden_flag = golden_flag_final,",
-						"          customer_name = customer_name_final,",
-						"          full_address = full_address_final,",
-						"          phone_number = phone_number_final,",
-						"          phone_number_flag = phone_number_final,",
-						"          customer_created_date = customer_created_date_final,",
-						"          created_at = created_at_final,",
-						"          updated_at = updated_at_final",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectForUpdate",
-						"splitRecords@newRecords window(asc(customer_register_sc, true),",
-						"     row_num = rowNumber()) ~> addRowNumber",
-						"selectForUpdate alterRow(updateIf(true())) ~> AlterRow1",
-						"splitRecords@existingRecords derive(phone_number_final = iif(\r",
-						"    isNull(phone_number_ms) ||\r",
-						"    length(regexReplace(toString(phone_number_ms), '[^0-9]', '')) != 8 ||\r",
-						"    not(regexMatch(regexReplace(toString(phone_number_ms), '[^0-9]', ''), '^[0-9]{8}$')) ||\r",
-						"    in(['00000000','11111111','22222222','33333333','44444444',\r",
-						"         '55555555','66666666','77777777','88888888','99999999'],regexReplace(toString(phone_number_ms), '[^0-9]', '')\r",
-						"    ),\r",
-						"    phone_number_sc,\r",
-						"    phone_number_ms\r",
-						"),",
-						"          full_address_final = iif(isNull(full_address_ms) || toString(full_address_ms) == '' || length(full_address_ms)<length(full_address_sc), full_address_sc, full_address_ms),",
-						"          customer_name_final = iif(isNull(customer_name_ms) || toString(customer_name_ms) == '' || length(customer_name_ms)<length(customer_name_sc), customer_name_sc, customer_name_ms),",
-						"          golden_flag_final = iif(isNull(golden_flag_ms) || toString(golden_flag_ms) == '' , golden_flag_sc, golden_flag_ms),",
-						"          customer_created_date_final = iif(isNull(customer_created_date_ms) || customer_created_date_sc<customer_created_date_ms, customer_created_date_sc,customer_created_date_ms),",
-						"          created_at_final = iif(isNull(created_at_ms) || created_at_ms<created_at_sc, created_at_sc,created_at_ms),",
-						"          updated_at_final = iif(isNull(updated_at_ms) || updated_at_sc>updated_at_ms, updated_at_sc,updated_at_ms),",
-						"          customer_master_id = customer_master_id_ms,",
-						"          customer_master_id_prime = customer_master_id_prime_ms,",
-						"          register_type = iif(!isNull(customer_register_ms) && length(customer_register_ms) == 7 && regexMatch(customer_register_ms, '^[0-9]{7}$'), 1,",
-						"    iif(!isNull(customer_register_ms) && length(customer_register_ms) == 10 && regexMatch(customer_register_ms, '^[A-Za-z]{2}[0-9]{8}$'), 0, toInteger(2)))) ~> chooseSource",
-						"aggregateDeduplicate select(mapColumn(",
-						"          customer_register_sc = customer_register,",
-						"          id_sc = id,",
-						"          is_reliable_register_sc = is_reliable_register,",
-						"          phone_number_sc = phone_number_cc,",
-						"          register_type_sc = register_type,",
-						"          full_address_sc = full_address_cc,",
-						"          customer_name_sc = customer_name_cc,",
-						"          golden_flag_sc = golden_flag_cc,",
-						"          customer_created_date_sc = customer_created_date,",
-						"          created_at_sc = created_at,",
-						"          updated_at_sc = updated_at",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"sourceMaster select(mapColumn(",
-						"          id_ms = id,",
-						"          customer_master_id_ms = customer_master_id,",
-						"          customer_master_id_prime_ms = customer_master_id_prime,",
-						"          customer_register_ms = customer_register,",
-						"          register_type_ms = register_type,",
-						"          golden_flag_ms = golden_flag,",
-						"          customer_name_ms = customer_name,",
-						"          full_address_ms = full_address,",
-						"          phone_number_ms = phone_number,",
-						"          created_at_ms = created_at,",
-						"          updated_at_ms = updated_at,",
-						"          customer_created_date_ms = customer_created_date",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectMaster",
-						"sourceMasterIds select(mapColumn(",
-						"          customer_master_id_ms = customer_master_id,",
-						"          customer_ag_id_ms = customer_ag_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectExistMasterIds",
-						"select3, selectExistMasterIds join(customer_ag_id_scs == customer_ag_id_ms,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> join1",
-						"join1 filter(isNull(customer_master_id_ms)) ~> filter1",
-						"filter1, selectForInsert join(customer_register_scs == customer_register,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> join2",
-						"join2 select(mapColumn(",
-						"          customer_ag_id = customer_ag_id_scs,",
-						"          created_at = created_at_scs,",
-						"          updated_at = updated_at_scs,",
-						"          customer_master_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select2",
-						"deriveClean select(mapColumn(",
-						"          customer_ag_id_scs = customer_ag_id,",
-						"          customer_register_scs = customer_register,",
-						"          customer_created_date_scs = customer_created_date,",
-						"          created_at_scs = created_at,",
-						"          updated_at_scs = updated_at",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select3",
-						"AlterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     deletable:false,",
-						"     insertable:false,",
-						"     updateable:true,",
-						"     upsertable:false,",
-						"     keys:['id'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sinkMaster",
-						"selectForInsert sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sinkInsertMaster",
-						"select2 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:false,",
-						"     upsertable:false,",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sinkMasterIds"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dwh_Sql')]"
-			]
 		}
 	]
 }

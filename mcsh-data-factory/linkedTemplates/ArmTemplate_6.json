@@ -1021,10 +1021,12 @@
 										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_ag_info"
+										"cw_table": "customer_ag_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -1979,13 +1981,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhCustomerTable": {
-										"cw_table": "cc_dwh_customer"
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_cc_info"
+										"cw_table": "customer_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2023,13 +2028,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhTradeShopTable": {
-										"cw_table": "cc_dwh_trade_shop"
+										"cw_table": "cc_dwh_trade_shop",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToMerchantDB": {
-										"cw_table": "trade_shop_cc_info"
+										"cw_table": "trade_shop_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2373,13 +2381,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhCustomerTable": {
-										"cw_table": "cc_dwh_customer"
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToDataServiceDB": {
-										"cw_table": "customer_cc_info"
+										"cw_table": "customer_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},
@@ -2417,13 +2428,16 @@
 								"parameters": {},
 								"datasetParameters": {
 									"ccDwhTradeShopTable": {
-										"cw_table": "cc_dwh_trade_shop"
+										"cw_table": "cc_dwh_trade_shop",
+										"cw_schema": "mch"
 									},
 									"addressFromDataServiceTable": {
-										"cw_table": "location"
+										"cw_table": "location",
+										"cw_schema": "mvs"
 									},
 									"saveToMerchantDB": {
-										"cw_table": "trade_shop_cc_info"
+										"cw_table": "trade_shop_cc_info",
+										"cw_schema": "mvs"
 									}
 								}
 							},

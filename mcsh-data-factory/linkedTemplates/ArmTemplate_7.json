@@ -1585,6 +1585,75 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ag_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ag_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_cc_master_customer')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1650,162 +1719,6 @@
 					"name": "CC Pipelines/Customer"
 				},
 				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_evs_allemployee_UpsertTrigger')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy_xy6",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [
-							{
-								"name": "Source",
-								"value": "newQuery0"
-							},
-							{
-								"name": "Destination",
-								"value": "evs//evs"
-							}
-						],
-						"typeProperties": {
-							"source": {
-								"type": "OracleSource",
-								"oracleReaderQuery": "select \n    FIRSTNAME as \"fn\",\n    LASTNAME as \"ln\",\n    REGNO as \"rn\",\n    COMPANYID as \"oid\",\n    PNAME as \"po\",\n    GNAME as \"gname\",\n    STATUS as \"status\",\n    EMPID as \"empid\",\n    STATUSDATE as \"status_date\",\n    ISFOREIGNER as \"is_foreigner\"\nfrom HRMS_PROD.V_BI_HREMPLOYEE \nwhere COMPANYID in  ('MCSCC', 'TD', 'TEL', 'AG', 'MG', 'ES', 'BMS', 'MCSES') \nand STATUS <> 'Бүртгэсэн'",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings",
-									"metadata": [
-										{
-											"name": "dfs",
-											"value": "sdf"
-										}
-									]
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": false,
-							"logSettings": {
-								"enableCopyActivityLog": true,
-								"copyActivityLogSettings": {
-									"logLevel": "Warning",
-									"enableReliableLogging": false
-								},
-								"logLocationSettings": {
-									"linkedServiceName": {
-										"referenceName": "linkedService_err",
-										"type": "LinkedServiceReference"
-									},
-									"path": "error"
-								}
-							},
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "SourceDataset_xy6",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "Evs_csv",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					},
-					{
-						"name": "df_evs_allemployee_upsert",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Copy_xy6",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "df_evs_allemployee_upsert",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"sourceEmployees": {},
-									"existingAllSources": {},
-									"upsertEmployees": {},
-									"archiveToDataLake": {
-										"fileName": "evs_archive.csv",
-										"folderName": "archive"
-									},
-									"logSkippedMigrated": {
-										"fileName": "evs_skip.csv",
-										"folderName": "skipped"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"windowStart": {
-						"type": "String"
-					},
-					"windowEnd": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "HR Pipelines/EVS"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T04:29:42Z"
 			},
 			"dependsOn": []
 		}
