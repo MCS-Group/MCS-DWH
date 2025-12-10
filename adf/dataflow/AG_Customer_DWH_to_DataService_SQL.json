@@ -152,7 +152,7 @@
 				"          customer_name,",
 				"          full_address,",
 				"          customer_register,",
-				"          register_type = selectRequiredFields@register_type,",
+				"          register_type,",
 				"          phone_number,",
 				"          customer_created_date,",
 				"          aimag_hot,",
