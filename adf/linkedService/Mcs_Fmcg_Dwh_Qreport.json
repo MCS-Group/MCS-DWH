@@ -1,0 +1,21 @@
+{
+	"name": "Mcs_Fmcg_Dwh_Qreport",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "Mcs_Fmcg_Dwh_Qreport",
+			"database": "Qreports",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "TumurOchir",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIxNGJkYjI1Yy01ZTQ1LTQxYzktYmI4OC02NDJhNGJiYTFhZDgiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "mcscc-vpnserver",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
