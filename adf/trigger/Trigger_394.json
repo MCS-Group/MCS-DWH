@@ -1,0 +1,24 @@
+{
+	"name": "Trigger_394",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "CopyPipeline_Qreports",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 24,
+				"startTime": "2025-12-11T09:31:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
