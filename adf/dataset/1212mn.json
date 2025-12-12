@@ -1,0 +1,15 @@
+{
+	"name": "1212mn",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestService_1212mn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": "/NSO/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_010V1.px"
+		},
+		"schema": []
+	}
+}
