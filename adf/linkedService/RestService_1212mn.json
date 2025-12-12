@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "RestService",
 		"typeProperties": {
-			"url": "https://data.1212.mn/api/v1/mn/",
+			"url": "https://data.1212.mn/",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
