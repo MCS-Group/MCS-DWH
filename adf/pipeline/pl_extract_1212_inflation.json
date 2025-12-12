@@ -19,7 +19,7 @@
 						"type": "RestSource",
 						"httpRequestTimeout": "00:01:40",
 						"requestInterval": "00.00:00:00.010",
-						"requestMethod": "POST",
+						"requestMethod": "GET",
 						"paginationRules": {
 							"supportRFC5988": "true"
 						}
@@ -42,7 +42,7 @@
 						"referenceName": "1212mn",
 						"type": "DatasetReference",
 						"parameters": {
-							"suburl": "api/v1/mn/NSO/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_010V1.px"
+							"suburl": "api/v1/mn/NSO/Economy%2C%20environment/Consumer%20Price%20Index/DT_NSO_0600_010V1.px"
 						}
 					}
 				],
