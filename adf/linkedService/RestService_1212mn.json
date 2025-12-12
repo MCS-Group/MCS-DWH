@@ -1,0 +1,12 @@
+{
+	"name": "RestService_1212mn",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://data.1212.mn/api/v1/mn/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
