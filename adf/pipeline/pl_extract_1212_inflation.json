@@ -51,7 +51,7 @@
 						"referenceName": "ADLS_Raw_CSV",
 						"type": "DatasetReference",
 						"parameters": {
-							"csv_fileName": "inflation",
+							"csv_fileName": "inflation.csv",
 							"csv_directory": "nso"
 						}
 					}
