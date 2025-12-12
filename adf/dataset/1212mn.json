@@ -5,10 +5,18 @@
 			"referenceName": "RestService_1212mn",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"suburl": {
+				"type": "String"
+			}
+		},
 		"annotations": [],
 		"type": "RestResource",
 		"typeProperties": {
-			"relativeUrl": "/NSO/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_010V1.px"
+			"relativeUrl": {
+				"value": "@dataset().suburl",
+				"type": "Expression"
+			}
 		},
 		"schema": []
 	}
