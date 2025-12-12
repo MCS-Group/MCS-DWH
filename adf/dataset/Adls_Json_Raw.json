@@ -1,0 +1,34 @@
+{
+	"name": "Adls_Json_Raw",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_FMCS_RAW",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			},
+			"folderName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderName",
+					"type": "Expression"
+				},
+				"fileSystem": "fmcg-raw"
+			}
+		},
+		"schema": {}
+	}
+}
