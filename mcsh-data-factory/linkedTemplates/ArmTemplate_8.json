@@ -101,6 +101,299 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "EmployeeProfile_deletes",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "EmployeeProfile_deletes",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"existingSource0": {},
+									"deleteOldSource0": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "HR Pipelines/EVS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-25T09:03:50Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ag_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ag_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "ag_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "AG Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_cc_master_customer')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "cc_customer_to_master",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "cc_customer_to_master",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceCC": {
+										"cw_table": "cc_dwh_customer",
+										"cw_schema": "mch"
+									},
+									"sourceMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sourceMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									},
+									"sinkMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkInsertMaster": {
+										"cw_table": "dwh_customer_master",
+										"cw_schema": "mch"
+									},
+									"sinkMasterIds": {
+										"cw_table": "dwh_full_customer_id_master",
+										"cw_schema": "mch"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "CC Pipelines/Customer"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_copy_temp')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureMySqlSource",
+								"query": "select * FROM datawarehouse.dwh_customer_master\nWHERE customer_register IN ('0001538', '0002127', '0002135', '0002267', '0002445', '0002518') ",
+								"queryTimeout": "02:00:00"
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DWH_Mysql",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": "dwh_customer_master"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Dwh_Sql",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_table": "dwh_customer_master",
+									"cw_schema": "mch"
+								}
+							}
+						]
+					},
+					{
+						"name": "AG_TradeShop_DWH_to_DataService_SQL",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "AG_TradeShop_DWH_to_DataService_SQL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"agDwhTradeShopTable": {
+										"cw_table": "ag_dwh_trade_shop",
+										"cw_schema": "mch"
+									},
+									"addressFromDataServiceTable": {
+										"cw_table": "location",
+										"cw_schema": "mvs"
+									},
+									"saveToDataServiceDB": {
+										"cw_table": "trade_shop_ag_info",
+										"cw_schema": "mvs"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_evs_allemployee_UpsertTrigger')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1041,6 +1334,34 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/pl_evs_allemployee_UpsertTrigger')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Trigger_394')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "CopyPipeline_Qreports",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 24,
+						"startTime": "2025-12-11T01:31:00Z",
+						"timeZone": "UTC"
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Trigger_qd9')]",

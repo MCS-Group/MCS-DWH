@@ -51,6 +51,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'MCS_HR_GreenERP_Source'"
 		},
+		"Mcs_Fmcg_Dwh_Qreport_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Mcs_Fmcg_Dwh_Qreport'"
+		},
 		"Merchant_DataService_DB_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'Merchant_DataService_DB'"
@@ -146,6 +150,18 @@
 		"MCS_HR_GreenERP_Source_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "V_BI_MCSG"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "Mcs_Fmcg_Dwh_Qreport"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "Qreports"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "TumurOchir"
 		},
 		"Oracle1_properties_typeProperties_server": {
 			"type": "string",
@@ -429,6 +445,9 @@
 					"MCS_HR_GreenERP_SC_password": {
 						"value": "[parameters('MCS_HR_GreenERP_SC_password')]"
 					},
+					"Mcs_Fmcg_Dwh_Qreport_password": {
+						"value": "[parameters('Mcs_Fmcg_Dwh_Qreport_password')]"
+					},
 					"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
 						"value": "[parameters('MCS_FMCG_DWH_MainDB_properties_typeProperties_server')]"
 					},
@@ -452,6 +471,15 @@
 					},
 					"MCS_HR_GreenERP_SC_properties_typeProperties_username": {
 						"value": "[parameters('MCS_HR_GreenERP_SC_properties_typeProperties_username')]"
+					},
+					"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_server": {
+						"value": "[parameters('Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_server')]"
+					},
+					"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_database": {
+						"value": "[parameters('Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_database')]"
+					},
+					"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_userName": {
+						"value": "[parameters('Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_userName')]"
 					}
 				}
 			},

@@ -13,6 +13,396 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/GreenERP_ALLEMPLOYEE_Raw')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_qd9",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "OracleSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "FlattenHierarchy"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "HR_GreenERP_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "TBLEMPLOYEE"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_GreenErp_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "ALLEMPLOYEE.csv",
+									"cw_folderPath": "@pipeline().parameters.main_directory"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					},
+					"main_directory": {
+						"type": "String",
+						"defaultValue": "GreenErp"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/EVS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-19T10:54:57Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GreenERP_AllEmployee')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "EmployeeProfile_From_GreenHR",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "EmployeeProfile_From_GreenHR",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourceEmployees": {},
+									"existingEmployees": {},
+									"Employee": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					},
+					"main_directory": {
+						"type": "String",
+						"defaultValue": "GreenErp"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/EVS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-24T11:00:03Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GreenERP_HREmployee')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_qd9",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "OracleSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "FlattenHierarchy"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "linkedService_err",
+										"type": "LinkedServiceReference"
+									},
+									"path": "tblemployee"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "HR_GreenERP_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "TBLEMPLOYEE"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_GreenErp_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "HREMPLOYEE.csv",
+									"cw_folderPath": "@pipeline().parameters.main_directory"
+								}
+							}
+						]
+					},
+					{
+						"name": "ADLS_Staging",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy_qd9",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ADLS_Staging_employee",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"cwfolder": "GreenErp",
+										"cwfilename": "HREMPLOYEE.csv"
+									},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					},
+					"main_directory": {
+						"type": "String",
+						"defaultValue": "GreenErp"
+					},
+					"cwfolder": {
+						"type": "string",
+						"defaultValue": "GreenErp"
+					},
+					"cwfilename": {
+						"type": "string",
+						"defaultValue": "HREMPLOYEE.csv"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GreenERP_SIDEPARTMENTTYPE')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_qd9",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "OracleSource",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "FlattenHierarchy"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "HR_GreenERP_DS",
+								"type": "DatasetReference",
+								"parameters": {
+									"tableName": "SIDEPARTMENTTYPE"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ADLS_Raw_GreenErp_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"cw_fileName": "SIDEPARTMENTTYPE.csv",
+									"cw_folderPath": "@pipeline().parameters.main_directory"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "String"
+					},
+					"windowEnd": {
+						"type": "String"
+					},
+					"main_directory": {
+						"type": "String",
+						"defaultValue": "GreenErp"
+					}
+				},
+				"folder": {
+					"name": "HR Pipelines/DW_Mysql"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-11-27T09:26:10Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/GreenERP_SIGRADE')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1444,299 +1834,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-11-27T09:26:11Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "EmployeeProfile_deletes",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "EmployeeProfile_deletes",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"existingSource0": {},
-									"deleteOldSource0": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/EVS"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-25T09:03:50Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_ag_customer_to_master')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ag_customer_to_master",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ag_customer_to_master",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"sourceCC": {
-										"cw_table": "ag_dwh_customer",
-										"cw_schema": "mch"
-									},
-									"sourceMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sourceMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									},
-									"sinkMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkInsertMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "AG Pipelines/Customer"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_cc_master_customer')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "cc_customer_to_master",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "cc_customer_to_master",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"sourceCC": {
-										"cw_table": "cc_dwh_customer",
-										"cw_schema": "mch"
-									},
-									"sourceMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sourceMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									},
-									"sinkMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkInsertMaster": {
-										"cw_table": "dwh_customer_master",
-										"cw_schema": "mch"
-									},
-									"sinkMasterIds": {
-										"cw_table": "dwh_full_customer_id_master",
-										"cw_schema": "mch"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "CC Pipelines/Customer"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_copy_temp')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy data1",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureMySqlSource",
-								"query": "select * FROM datawarehouse.dwh_customer_master\nWHERE customer_register IN ('0001538', '0002127', '0002135', '0002267', '0002445', '0002518') ",
-								"queryTimeout": "02:00:00"
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DWH_Mysql",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "dwh_customer_master"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "Dwh_Sql",
-								"type": "DatasetReference",
-								"parameters": {
-									"cw_table": "dwh_customer_master",
-									"cw_schema": "mch"
-								}
-							}
-						]
-					},
-					{
-						"name": "AG_TradeShop_DWH_to_DataService_SQL",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "AG_TradeShop_DWH_to_DataService_SQL",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"agDwhTradeShopTable": {
-										"cw_table": "ag_dwh_trade_shop",
-										"cw_schema": "mch"
-									},
-									"addressFromDataServiceTable": {
-										"cw_table": "location",
-										"cw_schema": "mvs"
-									},
-									"saveToDataServiceDB": {
-										"cw_table": "trade_shop_ag_info",
-										"cw_schema": "mvs"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
 			},
 			"dependsOn": []
 		}

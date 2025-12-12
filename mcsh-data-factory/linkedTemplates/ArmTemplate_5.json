@@ -13,6 +13,269 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/SIGRADE_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_SIGRADE",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Grade",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          GRADEID as short,",
+						"          CODE as string,",
+						"          GRADENO as short,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          grade_id = GRADEID,",
+						"          grade_no = GRADENO,",
+						"          code = CODE,",
+						"          name = NAME) ~> transform1",
+						"transform1 select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          grade_key as integer,",
+						"          grade_id as integer,",
+						"          code as string,",
+						"          grade_no as integer,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1,",
+						"     preCommands: [],",
+						"     postCommands: []) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SILEVEL_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_SILEVEL",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_SILEVEL",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          LEVELID as short,",
+						"          CODE as string,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          CREATED as string,",
+						"          UPDATED as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          level_id = LEVELID,",
+						"          code = CODE,",
+						"          is_active = toInteger(1),",
+						"          name = NAME) ~> transform1",
+						"transform1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          level_key as integer,",
+						"          level_id as integer,",
+						"          code as string,",
+						"          name as string,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TBLCOMPANY_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLCOMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPANYID as string,",
+						"          NAME as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          PARENTID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(company_code = COMPANYID,",
+						"          company_name = NAME,",
+						"          is_active = 1,",
+						"          source_system_code = '0',",
+						"          source_created_date = toTimestamp(CREATED),",
+						"          source_updated_date = toTimestamp(UPDATED),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC()) ~> transform1",
+						"transform1 select(mapColumn(",
+						"          company_code,",
+						"          company_name,",
+						"          is_active,",
+						"          source_system_code,",
+						"          source_created_date,",
+						"          source_updated_date,",
+						"          dw_created_date,",
+						"          dw_updated_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     input(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/TBLEMPEMPLHIST_From_Staging_to_DWH')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -3575,187 +3838,6 @@
 						"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimLevel"
 					]
 				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_ALLEPLOYEE')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_SIGRADE",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_SIGRADE",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"SIGRADE\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "SIGRADE.csv"
-									},
-									"sink1": {
-										"cwfolder": "SIGRADE"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/EVS"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-19T10:54:57Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_HREmployee')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_employee",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "HREMPLOYEE.csv"
-									},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"windowStart": {
-						"type": "String"
-					},
-					"windowEnd": {
-						"type": "String"
-					},
-					"main_directory": {
-						"type": "String",
-						"defaultValue": "GreenErp"
-					},
-					"cwfolder": {
-						"type": "string",
-						"defaultValue": "GreenErp"
-					},
-					"cwfilename": {
-						"type": "string",
-						"defaultValue": "HREMPLOYEE.csv"
-					}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:11Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_SIDEPARTMENTTYPE')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ADLS_Staging_TBLPOSITION",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ADLS_Staging_TBLPOSITION",
-								"type": "DataFlowReference",
-								"parameters": {
-									"cwfilename": "\"TBLPOSITION\""
-								},
-								"datasetParameters": {
-									"source1": {
-										"cwfolder": "GreenErp",
-										"cwfilename": "TBLPOSITION.csv"
-									},
-									"sink1": {
-										"cwfolder": "TBLPOSITION"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "HR Pipelines/DW_Mysql"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-11-27T09:26:10Z"
 			},
 			"dependsOn": []
 		}

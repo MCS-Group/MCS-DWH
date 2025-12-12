@@ -38,6 +38,9 @@
 		"MCS_HR_GreenERP_Source_password": {
 			"value": ""
 		},
+		"Mcs_Fmcg_Dwh_Qreport_password": {
+			"value": ""
+		},
 		"Merchant_DataService_DB_connectionString": {
 			"value": ""
 		},
@@ -109,6 +112,15 @@
 		},
 		"MCS_HR_GreenERP_Source_properties_typeProperties_userName": {
 			"value": "V_BI_MCSG"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_server": {
+			"value": "Mcs_Fmcg_Dwh_Qreport"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_database": {
+			"value": "Qreports"
+		},
+		"Mcs_Fmcg_Dwh_Qreport_properties_typeProperties_userName": {
+			"value": "TumurOchir"
 		},
 		"Oracle1_properties_typeProperties_server": {
 			"value": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com/orcl"
