@@ -38,7 +38,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "1212mn",
+						"referenceName": "ds_1212mn",
 						"type": "DatasetReference",
 						"parameters": {
 							"suburl": "api/v1/mn/NSO/Economy,%20environment/Consumer%20Price%20Index/DT_NSO_0600_010V1.px"
