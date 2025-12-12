@@ -13,6 +13,377 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/ADLS_Staging_copy1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"cwfolder": {
+						"type": "String",
+						"defaultValue": "TBLCOMPANY"
+					}
+				},
+				"folder": {
+					"name": "HR"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().cwfolder",
+							"type": "Expression"
+						},
+						"fileSystem": "hr-staging"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "COMPANYID",
+						"type": "UTF8"
+					},
+					{
+						"name": "NAME",
+						"type": "UTF8"
+					},
+					{
+						"name": "CREATED",
+						"type": "UTF8"
+					},
+					{
+						"name": "UPDATED",
+						"type": "UTF8"
+					},
+					{
+						"name": "PARENTID",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Adls_Json_Raw')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_FMCS_RAW",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					},
+					"folderName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderName",
+							"type": "Expression"
+						},
+						"fileSystem": "fmcg-raw"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureMySqlTable1_Employee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Azure_DWH_HR_link",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"cwtablename": {
+						"type": "String",
+						"defaultValue": "dim_employee"
+					}
+				},
+				"folder": {
+					"name": "HR"
+				},
+				"annotations": [],
+				"type": "AzureMySqlTable",
+				"schema": [
+					{
+						"name": "employee_key",
+						"type": "bigint",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_system_code",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_employee_id",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "company_id",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "employee_code",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "registration_number",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "family_name",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "last_name",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "first_name",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "gender",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "birth_date",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "nationality_id",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "employment_status",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "effective_start_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "effective_end_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "is_current_record",
+						"type": "tinyint",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_created_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_updated_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "dw_created_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "dw_updated_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "etl_batch_id",
+						"type": "bigint",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"tableName": {
+						"value": "@dataset().cwtablename",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureMySqlTable1_POSITION')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Azure_DWH_HR_link",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"cwtablename": {
+						"type": "String",
+						"defaultValue": "dim_position"
+					}
+				},
+				"folder": {
+					"name": "HR"
+				},
+				"annotations": [],
+				"type": "AzureMySqlTable",
+				"schema": [
+					{
+						"name": "position_key",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_system_code",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "source_position_id",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "company_key",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "position_code",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "position_name",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "position_category",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "position_level",
+						"type": "varchar",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "is_management",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "is_active",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "effective_start_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "effective_end_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "is_current_record",
+						"type": "int",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "dw_created_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "dw_updated_date",
+						"type": "datetime",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"tableName": {
+						"value": "@dataset().cwtablename",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureMySqlTable_COMPANY')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1427,536 +1798,6 @@
 						"value": "@dataset().cw_table",
 						"type": "Expression"
 					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Dwh_Sql')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDw",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"cw_table": {
-						"type": "string"
-					},
-					"cw_schema": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Shared"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().cw_schema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().cw_table",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Employee')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"cwfolder": {
-						"type": "string",
-						"defaultValue": "GreenErp"
-					},
-					"cwfilename": {
-						"type": "string",
-						"defaultValue": "HREMPLOYEE.csv"
-					}
-				},
-				"folder": {
-					"name": "HR"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().cwfilename",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().cwfolder",
-							"type": "Expression"
-						},
-						"fileSystem": "hr-raw"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "EMPID",
-						"type": "String"
-					},
-					{
-						"name": "CODE",
-						"type": "String"
-					},
-					{
-						"name": "FAMILYNAME",
-						"type": "String"
-					},
-					{
-						"name": "LASTNAME",
-						"type": "String"
-					},
-					{
-						"name": "FIRSTNAME",
-						"type": "String"
-					},
-					{
-						"name": "GENDER",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHDATE",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHCOUNTRYID",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHDIVISIONID",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHDISTRICTID",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHPLACE",
-						"type": "String"
-					},
-					{
-						"name": "COUNTRYID",
-						"type": "String"
-					},
-					{
-						"name": "DIVISIONID",
-						"type": "String"
-					},
-					{
-						"name": "DISTRICTID",
-						"type": "String"
-					},
-					{
-						"name": "NATIONALITYID",
-						"type": "String"
-					},
-					{
-						"name": "SOCIALORIGINID",
-						"type": "String"
-					},
-					{
-						"name": "MARITALSTATUS",
-						"type": "String"
-					},
-					{
-						"name": "BLOODGROUP",
-						"type": "String"
-					},
-					{
-						"name": "REGNO",
-						"type": "String"
-					},
-					{
-						"name": "PASSNO",
-						"type": "String"
-					},
-					{
-						"name": "FORPASSNO",
-						"type": "String"
-					},
-					{
-						"name": "EMDNO",
-						"type": "String"
-					},
-					{
-						"name": "NDDNO",
-						"type": "String"
-					},
-					{
-						"name": "ADDR1",
-						"type": "String"
-					},
-					{
-						"name": "ADDR2",
-						"type": "String"
-					},
-					{
-						"name": "HOMEPHONE",
-						"type": "String"
-					},
-					{
-						"name": "MOBILEPHONE",
-						"type": "String"
-					},
-					{
-						"name": "WORKPHONE",
-						"type": "String"
-					},
-					{
-						"name": "WORKPHONEEXT",
-						"type": "String"
-					},
-					{
-						"name": "FAX",
-						"type": "String"
-					},
-					{
-						"name": "EMAIL",
-						"type": "String"
-					},
-					{
-						"name": "POSTADDRESS",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTNAME",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTPHONE",
-						"type": "String"
-					},
-					{
-						"name": "WITHPICTURE",
-						"type": "String"
-					},
-					{
-						"name": "STATUS",
-						"type": "String"
-					},
-					{
-						"name": "CREATED",
-						"type": "String"
-					},
-					{
-						"name": "CREATEDBY",
-						"type": "String"
-					},
-					{
-						"name": "UPDATED",
-						"type": "String"
-					},
-					{
-						"name": "UPDATEDBY",
-						"type": "String"
-					},
-					{
-						"name": "IPADDRESS",
-						"type": "String"
-					},
-					{
-						"name": "MACADDRESS",
-						"type": "String"
-					},
-					{
-						"name": "TSTAMP",
-						"type": "String"
-					},
-					{
-						"name": "COMPANYID",
-						"type": "String"
-					},
-					{
-						"name": "STATUSDATE",
-						"type": "String"
-					},
-					{
-						"name": "LASTNAMELENGTH",
-						"type": "String"
-					},
-					{
-						"name": "EMAIL2",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTNAME2",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTPHONE2",
-						"type": "String"
-					},
-					{
-						"name": "ISBLACKLISTED",
-						"type": "String"
-					},
-					{
-						"name": "BLACKLISTREASON",
-						"type": "String"
-					},
-					{
-						"name": "BLACKLISTEDDATE",
-						"type": "String"
-					},
-					{
-						"name": "ISFOREIGNER",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTID",
-						"type": "String"
-					},
-					{
-						"name": "MILITARYSERVED",
-						"type": "String"
-					},
-					{
-						"name": "TRAININGSPORT",
-						"type": "String"
-					},
-					{
-						"name": "INTEREST",
-						"type": "String"
-					},
-					{
-						"name": "APPID",
-						"type": "String"
-					},
-					{
-						"name": "MILITARYNO",
-						"type": "String"
-					},
-					{
-						"name": "RELATIVEID",
-						"type": "String"
-					},
-					{
-						"name": "RELATIVEID2",
-						"type": "String"
-					},
-					{
-						"name": "MILITARYCLOSETYPE",
-						"type": "String"
-					},
-					{
-						"name": "MILITARYCOMMENT",
-						"type": "String"
-					},
-					{
-						"name": "LINKEDIN",
-						"type": "String"
-					},
-					{
-						"name": "FACEBOOK",
-						"type": "String"
-					},
-					{
-						"name": "TWITTER",
-						"type": "String"
-					},
-					{
-						"name": "ISSPYOATH",
-						"type": "String"
-					},
-					{
-						"name": "SPYOATHDATE",
-						"type": "String"
-					},
-					{
-						"name": "ISGOVERNMENTOATH",
-						"type": "String"
-					},
-					{
-						"name": "GOVERNMENTOATHDATE",
-						"type": "String"
-					},
-					{
-						"name": "ISMILITARYOATH",
-						"type": "String"
-					},
-					{
-						"name": "MILITARYOATHDATE",
-						"type": "String"
-					},
-					{
-						"name": "LINKID",
-						"type": "String"
-					},
-					{
-						"name": "ISRESIDENT",
-						"type": "String"
-					},
-					{
-						"name": "CIVILID",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Evs_csv')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "linkedService_err",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "HR"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": "evs.csv",
-						"container": "evs"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Evs_employee')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureMySql_allEmployee",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "HR"
-				},
-				"annotations": [],
-				"type": "AzureMySqlTable",
-				"schema": [
-					{
-						"name": "id",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "fn",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "rn",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "ln",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "oid",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "po",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "gname",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "empid",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "im",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "source",
-						"type": "varchar",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "created_at",
-						"type": "timestamp",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "updated_at",
-						"type": "timestamp",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "status_date",
-						"type": "datetime",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "status",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "gname_number",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					},
-					{
-						"name": "is_foreigner",
-						"type": "int",
-						"precision": 0,
-						"scale": 0
-					}
-				],
-				"typeProperties": {
-					"tableName": "employee_profile"
 				}
 			},
 			"dependsOn": []

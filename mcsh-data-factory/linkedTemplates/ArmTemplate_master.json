@@ -107,6 +107,10 @@
 			"type": "string",
 			"defaultValue": "lchuka1619@gmail.com"
 		},
+		"HttpServer_1212mn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.1212.mn/api/v1/mn/"
+		},
 		"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "192.168.244.16"
@@ -170,6 +174,10 @@
 		"Oracle1_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "hrms_prod"
+		},
+		"RestService_1212mn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.1212.mn/"
 		},
 		"linkedService1_properties_typeProperties_url": {
 			"type": "string",
@@ -357,6 +365,9 @@
 					"GitHubMcsDWH_properties_typeProperties_username": {
 						"value": "[parameters('GitHubMcsDWH_properties_typeProperties_username')]"
 					},
+					"HttpServer_1212mn_properties_typeProperties_url": {
+						"value": "[parameters('HttpServer_1212mn_properties_typeProperties_url')]"
+					},
 					"MCS_HR_GreenERP_Source_properties_typeProperties_server": {
 						"value": "[parameters('MCS_HR_GreenERP_Source_properties_typeProperties_server')]"
 					},
@@ -371,6 +382,9 @@
 					},
 					"Oracle1_properties_typeProperties_username": {
 						"value": "[parameters('Oracle1_properties_typeProperties_username')]"
+					},
+					"RestService_1212mn_properties_typeProperties_url": {
+						"value": "[parameters('RestService_1212mn_properties_typeProperties_url')]"
 					},
 					"linkedService1_properties_typeProperties_url": {
 						"value": "[parameters('linkedService1_properties_typeProperties_url')]"
@@ -586,6 +600,26 @@
 					},
 					"5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd": {
 						"value": "[parameters('5min Trigger_properties_AG_Order_1d_Ago_Extract_CSV_parameters_windowEnd')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_7')]"
+			]
+		},
+		{
+			"name": "mcsh-data-factory_ArmTemplate_9",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_9.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory": {
 						"value": "[parameters('Daily Morning_properties_AG_MainDB_to_Raw_parameters_main_directory')]"
@@ -650,7 +684,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_7')]"
+				"[resourceId('Microsoft.Resources/deployments', 'mcsh-data-factory_ArmTemplate_8')]"
 			]
 		}
 	]

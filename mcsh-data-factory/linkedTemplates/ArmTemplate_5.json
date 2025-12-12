@@ -13,6 +13,824 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeProfile_From_GreenHR_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_csv",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingAllSources"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingSource0"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "insertNewEmployees",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService_err",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"dataset": {
+								"referenceName": "ADLS_Raw_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "archiveToDataLake"
+						},
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "deleteOldSource0"
+						}
+					],
+					"transformations": [
+						{
+							"name": "transformStatusAndSource"
+						},
+						{
+							"name": "removeDuplicatesInSource"
+						},
+						{
+							"name": "extractNumberFromGname"
+						},
+						{
+							"name": "joinWithAllExisting"
+						},
+						{
+							"name": "filterOnlyNewEmployees"
+						},
+						{
+							"name": "selectAllSourcesKeys"
+						},
+						{
+							"name": "selectSource0Keys"
+						},
+						{
+							"name": "markForInsert"
+						},
+						{
+							"name": "markForDelete"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          fn as string,",
+						"          ln as string,",
+						"          rn as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          status as string,",
+						"          empid as integer,",
+						"          status_date as timestamp,",
+						"          is_foreigner as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false) ~> sourceEmployees",
+						"source(output(",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT DISTINCT rn, oid FROM employee_profile',",
+						"     format: 'query') ~> existingAllSources",
+						"source(output(",
+						"          id as integer,",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT id, rn, oid FROM employee_profile WHERE source = 0',",
+						"     format: 'query') ~> existingSource0",
+						"sourceEmployees derive(status = iif(status == 'Идэвхтэй', 1,",
+						"            iif(status == 'Ажлаас Гарсан', 2,",
+						"                iif(status == 'Шилжсэн', 2,",
+						"                    iif(status == 'Түр Эзгүй', 3, toInteger(null()))))),",
+						"          is_foreigner = iif(is_foreigner == true(), 1, 0),",
+						"          source = 0,",
+						"          rn = trim(toString(rn)),",
+						"          oid = trim(toString(oid))) ~> transformStatusAndSource",
+						"extractNumberFromGname aggregate(groupBy(rn,",
+						"          oid),",
+						"     fn = last(fn),",
+						"          ln = last(ln),",
+						"          po = last(po),",
+						"          gname = last(gname),",
+						"          status = last(status),",
+						"          empid = last(empid),",
+						"          status_date = max(status_date),",
+						"          is_foreigner = last(is_foreigner),",
+						"          source = last(source),",
+						"          gname_number = last(gname_number)) ~> removeDuplicatesInSource",
+						"transformStatusAndSource derive(gname_number = toInteger(regexReplace(gname, '[^0-9]', ''))) ~> extractNumberFromGname",
+						"removeDuplicatesInSource, selectAllSourcesKeys join(rn == existing_rn",
+						"     && oid == existing_oid,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinWithAllExisting",
+						"joinWithAllExisting filter(isNull(existing_rn)) ~> filterOnlyNewEmployees",
+						"existingAllSources select(mapColumn(",
+						"          existing_rn = rn,",
+						"          existing_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectAllSourcesKeys",
+						"existingSource0 select(mapColumn(",
+						"          delete_id = id,",
+						"          delete_rn = rn,",
+						"          delete_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSource0Keys",
+						"filterOnlyNewEmployees alterRow(insertIf(true())) ~> markForInsert",
+						"selectSource0Keys alterRow(deleteIf(true())) ~> markForDelete",
+						"markForInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 2) ~> insertNewEmployees",
+						"joinWithAllExisting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['employee_monthly_load.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> archiveToDataLake",
+						"markForDelete sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:true,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     keys:['delete_id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1) ~> deleteOldSource0"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeProfile_deletes')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/EVS"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "existingSource0"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Evs_employee",
+								"type": "DatasetReference"
+							},
+							"name": "deleteOldSource0"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectSource0Keys"
+						},
+						{
+							"name": "markForDelete"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          rn as string,",
+						"          oid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'SELECT id, rn, oid FROM employee_profile WHERE source = 0',",
+						"     format: 'query') ~> existingSource0",
+						"existingSource0 select(mapColumn(",
+						"          id,",
+						"          delete_rn = rn,",
+						"          delete_oid = oid",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectSource0Keys",
+						"selectSource0Keys alterRow(deleteIf(true())) ~> markForDelete",
+						"markForDelete sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          id as integer,",
+						"          fn as string,",
+						"          rn as string,",
+						"          ln as string,",
+						"          oid as string,",
+						"          po as string,",
+						"          gname as string,",
+						"          empid as integer,",
+						"          im as string,",
+						"          source as string,",
+						"          created_at as timestamp,",
+						"          updated_at as timestamp,",
+						"          status_date as timestamp,",
+						"          status as integer,",
+						"          gname_number as integer,",
+						"          is_foreigner as integer",
+						"     ),",
+						"     deletable:true,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     keys:['id'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 0) ~> deleteOldSource0"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Employee_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_EMPLOYEE",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "linkedService1",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "transform1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EMPID as string,",
+						"          CODE as string,",
+						"          FAMILYNAME as string,",
+						"          LASTNAME as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          BIRTHDATE as string,",
+						"          BIRTHCOUNTRYID as string,",
+						"          BIRTHDIVISIONID as string,",
+						"          BIRTHDISTRICTID as string,",
+						"          BIRTHPLACE as string,",
+						"          COUNTRYID as string,",
+						"          DIVISIONID as string,",
+						"          DISTRICTID as string,",
+						"          NATIONALITYID as string,",
+						"          SOCIALORIGINID as string,",
+						"          MARITALSTATUS as string,",
+						"          BLOODGROUP as string,",
+						"          REGNO as string,",
+						"          PASSNO as string,",
+						"          FORPASSNO as string,",
+						"          EMDNO as string,",
+						"          NDDNO as string,",
+						"          ADDR1 as string,",
+						"          ADDR2 as string,",
+						"          HOMEPHONE as string,",
+						"          MOBILEPHONE as string,",
+						"          WORKPHONE as string,",
+						"          WORKPHONEEXT as string,",
+						"          FAX as string,",
+						"          EMAIL as string,",
+						"          POSTADDRESS as string,",
+						"          CONTACTNAME as string,",
+						"          CONTACTPHONE as string,",
+						"          WITHPICTURE as string,",
+						"          STATUS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as string,",
+						"          COMPANYID as string,",
+						"          STATUSDATE as string,",
+						"          LASTNAMELENGTH as string,",
+						"          EMAIL2 as string,",
+						"          CONTACTNAME2 as string,",
+						"          CONTACTPHONE2 as string,",
+						"          ISBLACKLISTED as string,",
+						"          BLACKLISTREASON as string,",
+						"          BLACKLISTEDDATE as string,",
+						"          ISFOREIGNER as string,",
+						"          CONTACTID as string,",
+						"          MILITARYSERVED as string,",
+						"          TRAININGSPORT as string,",
+						"          INTEREST as string,",
+						"          APPID as string,",
+						"          MILITARYNO as string,",
+						"          RELATIVEID as string,",
+						"          RELATIVEID2 as string,",
+						"          MILITARYCLOSETYPE as string,",
+						"          MILITARYCOMMENT as string,",
+						"          LINKEDIN as string,",
+						"          FACEBOOK as string,",
+						"          TWITTER as string,",
+						"          ISSPYOATH as string,",
+						"          SPYOATHDATE as string,",
+						"          ISGOVERNMENTOATH as string,",
+						"          GOVERNMENTOATHDATE as string,",
+						"          ISMILITARYOATH as string,",
+						"          MILITARYOATHDATE as string,",
+						"          LINKID as string,",
+						"          ISRESIDENT as string,",
+						"          CIVILID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = '0',",
+						"          source_employee_id = EMPID,",
+						"          company_id = iif(isNull(COMPANYID),\"NO\",COMPANYID),",
+						"          employee_code = CODE,",
+						"          registration_number = REGNO,",
+						"          family_name = FAMILYNAME,",
+						"          last_name = LASTNAME,",
+						"          first_name = FIRSTNAME,",
+						"          birth_date = toDate(BIRTHDATE, 'yyyy.MM.dd'),",
+						"          nationality_id = toInteger(NATIONALITYID),",
+						"          employment_status = iif(isNull(STATUS),\"NO\",STATUS),",
+						"          effective_start_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          effective_end_date = toTimestamp('9999-12-31 23:59:59'),",
+						"          is_current_record = toInteger(1),",
+						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          etl_batch_id = toLong(0),",
+						"          length_regno = length(REGNO)) ~> transform1",
+						"transform1 select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          employee_key as long,",
+						"          source_system_code as string,",
+						"          source_employee_id as string,",
+						"          company_id as integer,",
+						"          employee_code as string,",
+						"          registration_number as string,",
+						"          family_name as string,",
+						"          last_name as string,",
+						"          first_name as string,",
+						"          gender as string,",
+						"          birth_date as date,",
+						"          nationality_id as integer,",
+						"          employment_status as string,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     saveOrder: 1,",
+						"     preCommands: [],",
+						"     postCommands: []) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/From_Staging_to_DWH_TBLDEPARTMENT')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_TBLDEPARTMENT",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_COMPANY",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable_Department",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joined"
+						},
+						{
+							"name": "derivedclean"
+						},
+						{
+							"name": "scdMark"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     cwfolder as string (\"TBLDEPARTMENT\"),",
+						"     cwtablename as string (\"dim_department\")",
+						"}",
+						"source(output(",
+						"          DEPID as short,",
+						"          DEPCODE as string,",
+						"          NAME as string,",
+						"          ISACTIVE as boolean,",
+						"          PARENTID as string,",
+						"          CREATED as string,",
+						"          UPDATED as string,",
+						"          COMPANYID as string,",
+						"          DEPTYPEID as short,",
+						"          PATH as string,",
+						"          PARENTPATH as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source(output(",
+						"          company_key as integer,",
+						"          company_code as string,",
+						"          company_name as string,",
+						"          is_active as boolean,",
+						"          source_system_code as string,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"source1, source2 join(COMPANYID == company_code,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joined",
+						"joined derive(source_department_id = toString(DEPID),",
+						"          department_code = toString(DEPCODE),",
+						"          department_name = trim(NAME),",
+						"          department_type_id = DEPTYPEID,",
+						"          parent_department_key_raw = trim(PARENTID),",
+						"          raw_parent_path = iif(isNull(PARENTPATH) || trim(PARENTPATH) == '', '', trim(PARENTPATH)),",
+						"          clean_parent_path = iif(PARENTPATH == '', '', trim(replace(replace(PARENTPATH, '|', '/'), '//', '/'))),",
+						"          department_path = iif(isNull(PATH) || trim(PATH) == '', '', trim(replace(replace(PATH, '|', '/'), '//', '/'))),",
+						"          is_active_int = iif(ISACTIVE == true(), 1, 0),",
+						"          effective_start_date = iif(isNull(CREATED), currentUTC(), toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          effective_end_date = iif(isNull(UPDATED), toTimestamp('9999-12-31T00:00:00Z'), toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss')),",
+						"          dw_created_date = currentUTC(),",
+						"          dw_updated_date = currentUTC(),",
+						"          etl_batch_id = toLong(currentUTC()),",
+						"          company_key = company_key,",
+						"          company_code = company_code) ~> derivedclean",
+						"derivedclean derive(business_hash = md5(concat(",
+						"        iifNull(department_code, ''), '|',",
+						"        iifNull(department_name, ''), '|',",
+						"        iifNull(toString(department_type_id), ''), '|',",
+						"        iifNull(parent_department_key_raw, ''), '|',",
+						"        iifNull(department_path, ''), '|',",
+						"        iifNull(toString(is_active_int), ''), '|',",
+						"        iifNull(toString(effective_start_date), ''), '|',",
+						"        iifNull(toString(effective_end_date), '')",
+						"    ) )) ~> scdMark",
+						"scdMark sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          department_key as integer,",
+						"          source_system_code as string,",
+						"          source_department_id as string,",
+						"          company_key as integer,",
+						"          department_code as string,",
+						"          department_name as string,",
+						"          parent_department_key as integer,",
+						"          department_level as string,",
+						"          is_active as integer,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     upsertKeyColumns: ['source_department_id','company_key']) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HREmployee_From_Staging_to_DWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "HR/Mysql"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ADLS_Staging_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureMySqlTable1_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sourcesystemcode"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EMPID as string,",
+						"          CODE as string,",
+						"          FAMILYNAME as string,",
+						"          LASTNAME as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          BIRTHDATE as string,",
+						"          BIRTHCOUNTRYID as string,",
+						"          BIRTHDIVISIONID as string,",
+						"          BIRTHDISTRICTID as string,",
+						"          BIRTHPLACE as string,",
+						"          COUNTRYID as string,",
+						"          DIVISIONID as string,",
+						"          DISTRICTID as string,",
+						"          NATIONALITYID as string,",
+						"          SOCIALORIGINID as string,",
+						"          MARITALSTATUS as string,",
+						"          BLOODGROUP as string,",
+						"          REGNO as string,",
+						"          PASSNO as string,",
+						"          FORPASSNO as string,",
+						"          EMDNO as string,",
+						"          NDDNO as string,",
+						"          ADDR1 as string,",
+						"          ADDR2 as string,",
+						"          HOMEPHONE as string,",
+						"          MOBILEPHONE as string,",
+						"          WORKPHONE as string,",
+						"          WORKPHONEEXT as string,",
+						"          FAX as string,",
+						"          EMAIL as string,",
+						"          POSTADDRESS as string,",
+						"          CONTACTNAME as string,",
+						"          CONTACTPHONE as string,",
+						"          WITHPICTURE as string,",
+						"          STATUS as string,",
+						"          CREATED as string,",
+						"          CREATEDBY as string,",
+						"          UPDATED as string,",
+						"          UPDATEDBY as string,",
+						"          IPADDRESS as string,",
+						"          MACADDRESS as string,",
+						"          TSTAMP as string,",
+						"          COMPANYID as string,",
+						"          STATUSDATE as string,",
+						"          LASTNAMELENGTH as string,",
+						"          EMAIL2 as string,",
+						"          CONTACTNAME2 as string,",
+						"          CONTACTPHONE2 as string,",
+						"          ISBLACKLISTED as string,",
+						"          BLACKLISTREASON as string,",
+						"          BLACKLISTEDDATE as string,",
+						"          ISFOREIGNER as string,",
+						"          CONTACTID as string,",
+						"          MILITARYSERVED as string,",
+						"          TRAININGSPORT as string,",
+						"          INTEREST as string,",
+						"          APPID as string,",
+						"          MILITARYNO as string,",
+						"          RELATIVEID as string,",
+						"          RELATIVEID2 as string,",
+						"          MILITARYCLOSETYPE as string,",
+						"          MILITARYCOMMENT as string,",
+						"          LINKEDIN as string,",
+						"          FACEBOOK as string,",
+						"          TWITTER as string,",
+						"          ISSPYOATH as string,",
+						"          SPYOATHDATE as string,",
+						"          ISGOVERNMENTOATH as string,",
+						"          GOVERNMENTOATHDATE as string,",
+						"          ISMILITARYOATH as string,",
+						"          MILITARYOATHDATE as string,",
+						"          LINKID as string,",
+						"          ISRESIDENT as string,",
+						"          CIVILID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: true,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(source_system_code = 0,",
+						"          COMPANYID = iif(isNull(COMPANYID), 'MCK', COMPANYID),",
+						"          source_employee_id = iif(isNull(EMPID), 'unknown_id', toString(EMPID) )) ~> sourcesystemcode",
+						"sourcesystemcode sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          employee_key as long,",
+						"          source_system_code as string,",
+						"          source_employee_id as string,",
+						"          company_id as string,",
+						"          employee_code as string,",
+						"          registration_number as string,",
+						"          family_name as string,",
+						"          last_name as string,",
+						"          first_name as string,",
+						"          gender as string,",
+						"          birth_date as date,",
+						"          nationality_id as integer,",
+						"          employment_status as string,",
+						"          effective_start_date as timestamp,",
+						"          effective_end_date as timestamp,",
+						"          is_current_record as integer,",
+						"          source_created_date as timestamp,",
+						"          source_updated_date as timestamp,",
+						"          dw_created_date as timestamp,",
+						"          dw_updated_date as timestamp,",
+						"          etl_batch_id as long",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          each(match(/* All input columns */true()),",
+						"               /* Input name */$$ = $$)",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SIGRADE_From_Staging_to_DWH')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -3029,813 +3847,6 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_df_employee_history_copy1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR/AzureSqlDw"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "employee"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "DelimitedText1",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "filter1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          employee_key as long,",
-						"          source_system_code as string,",
-						"          source_employee_id as string,",
-						"          company_key as integer,",
-						"          employee_code as string,",
-						"          registration_number as string,",
-						"          family_name as string,",
-						"          last_name as string,",
-						"          first_name as string,",
-						"          gender as string,",
-						"          birth_date as date,",
-						"          nationality_id as integer,",
-						"          employment_status as string,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as boolean,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp,",
-						"          etl_batch_id as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> employee",
-						"employee filter(source_employee_id=='18096') ~> filter1",
-						"filter1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_df_employee_history_copy2')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR/AzureSqlDw"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "employeeHist"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "company"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "employee"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "department"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "position"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "grade"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "level"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Sink",
-								"type": "DatasetReference"
-							},
-							"name": "sink1",
-							"rejectedDataLinkedService": {
-								"referenceName": "linkedService_err",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "joinCompany"
-						},
-						{
-							"name": "sourcesystemcode"
-						},
-						{
-							"name": "alterRow1"
-						},
-						{
-							"name": "joinEmployee"
-						},
-						{
-							"name": "joinDepart"
-						},
-						{
-							"name": "joinPosition"
-						},
-						{
-							"name": "joinGrade"
-						},
-						{
-							"name": "joinLevel"
-						},
-						{
-							"name": "derivedColumn1"
-						},
-						{
-							"name": "selectEmployee"
-						},
-						{
-							"name": "filter1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          HISTORYID as long,",
-						"          EMPID as long,",
-						"          BEGINDATE as string,",
-						"          ENDDATE as string,",
-						"          ORDERID as long,",
-						"          ORDERTYPE as string,",
-						"          COMPANYID as string,",
-						"          DEPID as string,",
-						"          POSITIONID as long,",
-						"          GRADEID as long,",
-						"          LEVELID as long,",
-						"          BASEWAGE as decimal(18,4),",
-						"          BASEWAGECURRCODE as string,",
-						"          TSTAMP as timestamp,",
-						"          CREATED as string,",
-						"          CREATEDBY as string,",
-						"          UPDATED as string,",
-						"          UPDATEDBY as string,",
-						"          IPADDRESS as string,",
-						"          MACADDRESS as string,",
-						"          ORDERNO as string,",
-						"          ISMANUALHIST as string,",
-						"          ISNOTLOCALHIST as string,",
-						"          LEGALENTITYID as long,",
-						"          OLDDEPNAME as string,",
-						"          JOBID as long,",
-						"          NOTE as string,",
-						"          INSURETYPEID as long,",
-						"          LABOURCONDITION as string,",
-						"          ISMULT as string,",
-						"          MULTYEAR as decimal(18,4),",
-						"          HISTREASON as string,",
-						"          HISTREASONNAMES as string,",
-						"          TOTALWAGE as decimal(18,4),",
-						"          EVOLVEWAGE as decimal(18,4),",
-						"          CALCPERCENT as decimal(18,4),",
-						"          GRADETYPEID as long,",
-						"          LEVELNO as long,",
-						"          FTEMAINID as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> employeeHist",
-						"source(output(",
-						"          company_key as integer,",
-						"          company_code as string,",
-						"          company_name as string,",
-						"          is_active as boolean,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> company",
-						"source(output(",
-						"          employee_key as long,",
-						"          source_system_code as string,",
-						"          source_employee_id as string,",
-						"          company_key as integer,",
-						"          employee_code as string,",
-						"          registration_number as string,",
-						"          family_name as string,",
-						"          last_name as string,",
-						"          first_name as string,",
-						"          gender as string,",
-						"          birth_date as date,",
-						"          nationality_id as integer,",
-						"          employment_status as string,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as boolean,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp,",
-						"          etl_batch_id as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> employee",
-						"source(output(",
-						"          department_key as integer,",
-						"          source_system_code as string,",
-						"          source_department_id as string,",
-						"          company_key as integer,",
-						"          department_code as string,",
-						"          department_name as string,",
-						"          parent_department_key as integer,",
-						"          department_level as string,",
-						"          is_active as boolean,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as boolean,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> department",
-						"source(output(",
-						"          position_key as integer,",
-						"          source_system_code as string,",
-						"          source_position_id as string,",
-						"          company_key as integer,",
-						"          position_code as string,",
-						"          position_name as string,",
-						"          position_category as string,",
-						"          position_level as string,",
-						"          is_management as boolean,",
-						"          is_active as boolean,",
-						"          effective_start_date as timestamp,",
-						"          effective_end_date as timestamp,",
-						"          is_current_record as boolean,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> position",
-						"source(output(",
-						"          grade_key as integer,",
-						"          grade_id as integer,",
-						"          code as string,",
-						"          grade_no as integer,",
-						"          name as string,",
-						"          is_active as boolean,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> grade",
-						"source(output(",
-						"          LEVELID as long,",
-						"          CODE as string,",
-						"          NAME as string,",
-						"          ISACTIVE as string,",
-						"          CREATED as string,",
-						"          CREATEDBY as string,",
-						"          UPDATED as string,",
-						"          UPDATEDBY as string,",
-						"          IPADDRESS as string,",
-						"          MACADDRESS as string,",
-						"          TSTAMP as timestamp,",
-						"          MASTERID as long,",
-						"          ISMASTER as string,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp,",
-						"          level_id as long,",
-						"          is_active as boolean",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> level",
-						"employeeHist, company join(COMPANYID == company_code,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinCompany",
-						"joinLevel derive(source_system_code = 0,",
-						"          is_current_position = 1,",
-						"          is_active_employment = 1,",
-						"          begin_date = toDate(BEGINDATE, 'yyyy-MM-dd'),",
-						"          end_date = toDate(ENDDATE, 'yyyy-MM-dd'),",
-						"          source_history_id = HISTORYID,",
-						"          source_order_id = ORDERID,",
-						"          order_type = ORDERTYPE,",
-						"          order_number = ORDERNO,",
-						"          level_number = employeeHist@LEVELID,",
-						"          base_wage = BASEWAGE,",
-						"          base_wage_currency = BASEWAGECURRCODE,",
-						"          insurance_type_id = INSURETYPEID,",
-						"          labour_condition = LABOURCONDITION,",
-						"          source_created_date = toTimestamp(employeeHist@CREATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          source_updated_date = toTimestamp(employeeHist@UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          dw_created_date = currentUTC(),",
-						"          dw_updated_date = currentUTC(),",
-						"          etl_batch_id = toLong(currentUTC())) ~> sourcesystemcode",
-						"sourcesystemcode alterRow(upsertIf(!isNull(source_history_id))) ~> alterRow1",
-						"joinCompany, selectEmployee join(toString(EMPID) == toString(source_employee_id),",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinEmployee",
-						"derivedColumn1, department join(toString(DEPID) == source_department_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinDepart",
-						"joinDepart, position join(toString(POSITIONID) == source_position_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinPosition",
-						"joinPosition, grade join(GRADEID == grade_id,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinGrade",
-						"joinGrade, level join(employeeHist@LEVELID == level@LEVELID,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> joinLevel",
-						"joinEmployee derive({emp_left } = toString(EMPID),",
-						"          emp_right = toString(source_employee_id)) ~> derivedColumn1",
-						"employee select(mapColumn(",
-						"          employee_key,",
-						"          source_system_code,",
-						"          source_employee_id,",
-						"          company_key,",
-						"          employee_code",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> selectEmployee",
-						"selectEmployee filter(source_employee_id=='18096') ~> filter1",
-						"alterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:true,",
-						"     upsertable:true,",
-						"     keys:['source_history_id'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_df_position')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR/AzureSqlDw"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						},
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "source2"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Sink",
-								"type": "DatasetReference"
-							},
-							"name": "sink1",
-							"rejectedDataLinkedService": {
-								"referenceName": "linkedService_err",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "join1"
-						},
-						{
-							"name": "sourcesystemcode"
-						},
-						{
-							"name": "renamecols"
-						},
-						{
-							"name": "select1"
-						},
-						{
-							"name": "alterRow1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          POSITIONID as long,",
-						"          COMPANYID as string,",
-						"          DEPID as string,",
-						"          POSGROUPID as long,",
-						"          CODE as string,",
-						"          NAME as string,",
-						"          EMPLOYMENTTYPEID as long,",
-						"          GRADEID as long,",
-						"          DIRECTPOSITIONID as long,",
-						"          NONDIRECTPOSITIONID as long,",
-						"          REPORTPOSITIONID as long,",
-						"          GOAL as string,",
-						"          CHARACTERISTIC as string,",
-						"          VACANCYDAYS as long,",
-						"          LABOURCONDITION as string,",
-						"          ISACTIVE as string,",
-						"          CREATED as string,",
-						"          CREATEDBY as string,",
-						"          UPDATED as string,",
-						"          UPDATEDBY as string,",
-						"          IPADDRESS as string,",
-						"          MACADDRESS as string,",
-						"          TSTAMP as timestamp,",
-						"          JOBDESCID as long,",
-						"          JOBID as long,",
-						"          TYPE as string,",
-						"          POSITIONOCCID as long,",
-						"          POSLEVEL as long,",
-						"          JDECOSTCENTER as string,",
-						"          JDE_F0006_CO as string,",
-						"          JDE_F0006_RP01 as string,",
-						"          JDE_F0006_RP02 as string,",
-						"          POSCATEGORYID as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     waterMarkColumn: 'POSITIONID',",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table',",
-						"     mode: 'read') ~> source1",
-						"source(output(",
-						"          company_key as integer,",
-						"          company_code as string,",
-						"          company_name as string,",
-						"          is_active as boolean,",
-						"          source_system_code as string,",
-						"          source_created_date as timestamp,",
-						"          source_updated_date as timestamp,",
-						"          dw_created_date as timestamp,",
-						"          dw_updated_date as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source2",
-						"source1, source2 join(COMPANYID == company_code,",
-						"     joinType:'inner',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> join1",
-						"join1 derive(COMPANYID = iif(isNull(COMPANYID), 'MCK', COMPANYID),",
-						"          source_system_code = 0,",
-						"          ISACTIVE_INT = iif(ISACTIVE=='Y', 1, 0),",
-						"          company_key = company_key) ~> sourcesystemcode",
-						"sourcesystemcode derive(source_position_id = toString(POSITIONID),",
-						"          position_code = CODE,",
-						"          position_name = NAME,",
-						"          position_category = TYPE,",
-						"          position_level = toString(POSLEVEL),",
-						"          is_management = toInteger(iif(POSLEVEL <= 2, 1, 0)),",
-						"          is_active = toInteger(ISACTIVE_INT),",
-						"          effective_start_date = iif(isNull(CREATED), currentUTC(), toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss')),",
-						"          effective_end_date = iif(isNull(UPDATED), toTimestamp('9999-12-31T00:00:00Z'), toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss')),",
-						"          is_current_record = toInteger(1),",
-						"          dw_created_date = currentTimestamp(),",
-						"          dw_updated_date = currentTimestamp()) ~> renamecols",
-						"renamecols select(mapColumn(",
-						"          source_system_code,",
-						"          source_position_id,",
-						"          company_key,",
-						"          position_code,",
-						"          position_name,",
-						"          position_category,",
-						"          position_level,",
-						"          is_management,",
-						"          is_active,",
-						"          effective_start_date,",
-						"          effective_end_date,",
-						"          is_current_record,",
-						"          dw_created_date,",
-						"          dw_updated_date",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"select1 alterRow(upsertIf(!isNull(source_position_id))) ~> alterRow1",
-						"alterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: true,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:true,",
-						"     upsertable:true,",
-						"     keys:['source_position_id'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          source_system_code,",
-						"          source_position_id,",
-						"          company_key,",
-						"          position_code,",
-						"          position_name,",
-						"          position_category,",
-						"          position_level,",
-						"          is_management,",
-						"          is_active,",
-						"          effective_start_date,",
-						"          effective_end_date,",
-						"          is_current_record,",
-						"          dw_created_date,",
-						"          dw_updated_date",
-						"     )) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_df_sigrade')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR/AzureSqlDw"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Sink",
-								"type": "DatasetReference"
-							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "transform1"
-						},
-						{
-							"name": "select1"
-						},
-						{
-							"name": "alterRow1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          GRADEID as long,",
-						"          CODE as string,",
-						"          GRADENO as long,",
-						"          NAME as string,",
-						"          ISACTIVE as string,",
-						"          CREATED as string,",
-						"          CREATEDBY as string,",
-						"          UPDATED as string,",
-						"          UPDATEDBY as string,",
-						"          IPADDRESS as string,",
-						"          MACADDRESS as string,",
-						"          TSTAMP as timestamp,",
-						"          MASTERID as long,",
-						"          ISMASTER as string,",
-						"          GRADETYPEID as long",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source1",
-						"source1 derive(is_active = 1,",
-						"          source_system_code = '0',",
-						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          dw_created_date = currentUTC(),",
-						"          dw_updated_date = currentUTC(),",
-						"          grade_id = GRADEID,",
-						"          grade_no = GRADENO,",
-						"          code = CODE,",
-						"          name = NAME) ~> transform1",
-						"transform1 select(mapColumn(",
-						"          grade_id,",
-						"          grade_no,",
-						"          code,",
-						"          name,",
-						"          is_active,",
-						"          source_system_code,",
-						"          source_created_date,",
-						"          source_updated_date,",
-						"          dw_created_date,",
-						"          dw_updated_date",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> select1",
-						"select1 alterRow(upsertIf(!isNull(grade_id))) ~> alterRow1",
-						"alterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: true,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:true,",
-						"     upsertable:true,",
-						"     keys:['grade_id'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dwh_df_silevel')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "HR/AzureSqlDw"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Source",
-								"type": "DatasetReference"
-							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Dataset_Sink",
-								"type": "DatasetReference"
-							},
-							"name": "sinkDimLevel"
-						}
-					],
-					"transformations": [
-						{
-							"name": "transform1"
-						},
-						{
-							"name": "select1"
-						},
-						{
-							"name": "alterRow1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          LEVELID as long,",
-						"          CODE as string,",
-						"          NAME as string,",
-						"          ISACTIVE as string,",
-						"          CREATED as string,",
-						"          CREATEDBY as string,",
-						"          UPDATED as string,",
-						"          UPDATEDBY as string,",
-						"          IPADDRESS as string,",
-						"          MACADDRESS as string,",
-						"          TSTAMP as timestamp,",
-						"          MASTERID as long,",
-						"          ISMASTER as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> source1",
-						"source1 derive(source_system_code = '0',",
-						"          source_created_date = toTimestamp(CREATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          source_updated_date = toTimestamp(UPDATED, 'yyyy.MM.dd HH:mm:ss'),",
-						"          dw_created_date = currentUTC(),",
-						"          dw_updated_date = currentUTC(),",
-						"          level_id = LEVELID,",
-						"          is_active = toInteger(1),",
-						"          level_name = NAME,",
-						"          level_code = CODE) ~> transform1",
-						"transform1 select(skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> select1",
-						"select1 alterRow(upsertIf(!isNull(level_id))) ~> alterRow1",
-						"alterRow1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     deletable:false,",
-						"     insertable:true,",
-						"     updateable:true,",
-						"     upsertable:true,",
-						"     keys:['level_id'],",
-						"     format: 'table',",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimLevel"
 					]
 				}
 			},

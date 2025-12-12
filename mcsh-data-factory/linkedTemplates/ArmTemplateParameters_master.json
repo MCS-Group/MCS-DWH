@@ -80,6 +80,9 @@
 		"GitHubMcsDWH_properties_typeProperties_username": {
 			"value": "lchuka1619@gmail.com"
 		},
+		"HttpServer_1212mn_properties_typeProperties_url": {
+			"value": "https://data.1212.mn/api/v1/mn/"
+		},
 		"MCS_FMCG_DWH_MainDB_properties_typeProperties_server": {
 			"value": "192.168.244.16"
 		},
@@ -127,6 +130,9 @@
 		},
 		"Oracle1_properties_typeProperties_username": {
 			"value": "hrms_prod"
+		},
+		"RestService_1212mn_properties_typeProperties_url": {
+			"value": "https://data.1212.mn/"
 		},
 		"linkedService1_properties_typeProperties_url": {
 			"value": "https://mcsdatalake.dfs.core.windows.net/"

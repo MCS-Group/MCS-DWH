@@ -91,6 +91,10 @@
 			"type": "string",
 			"defaultValue": "lchuka1619@gmail.com"
 		},
+		"HttpServer_1212mn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.1212.mn/api/v1/mn/"
+		},
 		"MCS_HR_GreenERP_Source_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "green-erp-db.ca0tieoyjuvl.ap-east-1.rds.amazonaws.com:1521:ORCL"
@@ -110,6 +114,10 @@
 		"Oracle1_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "hrms_prod"
+		},
+		"RestService_1212mn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.1212.mn/"
 		},
 		"linkedService1_properties_typeProperties_url": {
 			"type": "string",
@@ -333,6 +341,21 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/HttpServer_1212mn')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('HttpServer_1212mn_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/MCS_HR_GreenERP_Source')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -393,6 +416,21 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/RestService_1212mn')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('RestService_1212mn_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/linkedService1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -439,28 +477,6 @@
 						"startTime": "2025-11-24T02:10:00Z",
 						"timeZone": "UTC"
 					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Oracle-VM2-IR')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/mcscc-vpnserver')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {
-					"selfContainedInteractiveAuthoringEnabled": false
 				}
 			},
 			"dependsOn": []
