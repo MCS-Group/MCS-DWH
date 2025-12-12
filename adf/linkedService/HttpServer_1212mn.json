@@ -1,0 +1,12 @@
+{
+	"name": "HttpServer_1212mn",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://data.1212.mn/api/v1/mn/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
