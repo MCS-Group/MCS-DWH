@@ -1,0 +1,22 @@
+{
+	"name": "AzureDatabricks1",
+	"properties": {
+		"parameters": {
+			"clusterId": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-1134285564404579.19.azuredatabricks.net",
+			"authentication": "MSI",
+			"workspaceResourceId": "/subscriptions/87f77c92-9b7e-47a2-b984-52d0c5c7f9db/resourceGroups/MCS-Holding-Data-Warehouse/providers/Microsoft.Databricks/workspaces/DbrickSpace",
+			"existingClusterId": "@linkedService().clusterId"
+		},
+		"connectVia": {
+			"referenceName": "mcscc-vpnserver",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
