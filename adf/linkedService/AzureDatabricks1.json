@@ -1,11 +1,6 @@
 {
 	"name": "AzureDatabricks1",
 	"properties": {
-		"parameters": {
-			"clusterId": {
-				"type": "String"
-			}
-		},
 		"annotations": [],
 		"type": "AzureDatabricks",
 		"typeProperties": {
