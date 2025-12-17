@@ -1,0 +1,62 @@
+{
+	"name": "pl_extract_1212_incomefamily",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:02:00",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "POST",
+						"requestBody": "{\n  \"query\": [],\n  \"response\": {\n    \"format\": \"json-stat2\"\n  }\n}",
+						"requestHeaders": {
+							"Content-Type": "application/json"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_1212mn",
+						"type": "DatasetReference",
+						"parameters": {
+							"suburl": "api/v1/mn/NSO/Society, development/Household income and expenditure/DT_NSO_1900_018V1.px"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Adls_Json_Raw",
+						"type": "DatasetReference",
+						"parameters": {
+							"fileName": "income_family.json",
+							"folderName": "nso"
+						}
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
