@@ -27,6 +27,21 @@
 				},
 				{
 					"name": "derivedColumn1"
+				},
+				{
+					"name": "flatten2"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "flatten3"
+				},
+				{
+					"name": "derivedColumn3"
 				}
 			],
 			"scriptLines": [
@@ -48,14 +63,39 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine') ~> source1",
-				"source1 foldDown(unroll(value, value),",
+				"derivedColumn2 foldDown(unroll(sar),",
+				"     mapColumn(",
+				"          value",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 derive(dimension = array(dimension.{Сар}.category.index)) ~> derivedColumn1",
+				"derivedColumn1 foldDown(unroll(dimension),",
 				"     mapColumn(",
 				"          dimension,",
 				"          value",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> flatten1",
-				"flatten1 derive(dimension = array(dimension.{Сар}.label)) ~> derivedColumn1",
+				"     skipDuplicateMapOutputs: false) ~> flatten2",
+				"flatten3 derive(sar = ERROR_FUNCTION('map(dimension.{Сар}.category.label, m -> m[elementAt(mapKeys(m), 1)])')) ~> derivedColumn2",
+				"source1 select(mapColumn(",
+				"          dimension,",
+				"          value,",
+				"          sar = dimension.{Сар}.category.index",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"derivedColumn3 foldDown(unrollMultiple(sar,value),",
+				"     mapColumn(",
+				"          dimension,",
+				"          value,",
+				"          sar",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten3",
+				"select1 derive(sar = mapIndex(array(dimension.{Сар}.category.index), #item)\r",
+				"\r",
+				") ~> derivedColumn3",
 				" sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     umask: 0022,",
